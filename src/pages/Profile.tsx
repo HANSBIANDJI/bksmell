@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,7 +32,7 @@ const orderStatuses = {
 };
 
 export default function Profile() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { orders } = useOrder();
   const [activeTab, setActiveTab] = useState('orders');
 
@@ -103,7 +103,7 @@ export default function Profile() {
                             variant="outline"
                             size="sm"
                             className="gap-2"
-                            onClick={() => navigate(`/order-tracking/${orderNumber}`)}
+                            onClick={() => router.push(`/order-tracking/${orderNumber}`)}
                           >
                             Suivre
                             <ExternalLink className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function Profile() {
                 <p className="text-gray-600 mb-4">
                   Vous n'avez pas encore passé de commande
                 </p>
-                <Button onClick={() => navigate('/parfums')}>
+                <Button onClick={() => router.push('/parfums')}>
                   Découvrir nos parfums
                 </Button>
               </motion.div>

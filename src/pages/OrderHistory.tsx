@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, 
@@ -45,7 +45,7 @@ const orderStatuses = {
 };
 
 export default function OrderHistory() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { orders } = useOrder();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -211,7 +211,7 @@ export default function OrderHistory() {
                             variant="outline"
                             size="sm"
                             className="w-full sm:w-auto"
-                            onClick={() => navigate(`/order-tracking/${orderNumber}`)}
+                            onClick={() => router.push(`/order-tracking/${orderNumber}`)}
                           >
                             Suivre
                             <ExternalLink className="ml-2 h-4 w-4" />
@@ -264,7 +264,7 @@ export default function OrderHistory() {
                   ? "Aucune commande ne correspond à vos critères de recherche"
                   : "Vous n'avez pas encore passé de commande"}
               </p>
-              <Button onClick={() => navigate('/parfums')}>
+              <Button onClick={() => router.push('/parfums')}>
                 Découvrir nos parfums
               </Button>
             </motion.div>

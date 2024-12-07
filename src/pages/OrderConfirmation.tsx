@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Package, Truck, MapPin, Clock, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,34 +10,24 @@ import { useCart } from '@/contexts/CartContext';
 import { useUserStore } from '@/stores/globalStore';
 
 export default function OrderConfirmation() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
   const { toast } = useToast();
   const { clearCart } = useCart();
   const currentOrder = useUserStore((state) => state.currentOrder);
   const setCurrentOrder = useUserStore((state) => state.setCurrentOrder);
 
   useEffect(() => {
-    // Vérifier si nous avons une commande dans le state de navigation
-    const orderFromState = location.state?.order;
-    
-    if (orderFromState) {
-      // Si oui, mettre à jour le store
-      setCurrentOrder(orderFromState);
-    } else if (!currentOrder) {
-      // Si pas de commande ni dans le state ni dans le store, rediriger
-      navigate('/', { replace: true });
+    if (!currentOrder) {
+      router.push('/');
       return;
     }
-
-    // Vider le panier
     clearCart();
 
     return () => {
       // Nettoyage lors du démontage du composant
       setCurrentOrder(null);
     };
-  }, [location.state, currentOrder, navigate, clearCart, setCurrentOrder]);
+  }, [currentOrder, router, clearCart, setCurrentOrder]);
 
   // Si pas de commande, ne rien afficher pendant la redirection
   if (!currentOrder) {
@@ -46,7 +36,7 @@ export default function OrderConfirmation() {
 
   const orderNumber = String(currentOrder.id).padStart(4, '0');
 
-  const copyTrackingNumber = () => {
+  const handleCopyOrderId = () => {
     navigator.clipboard.writeText(orderNumber);
     toast({
       title: "Copié !",
@@ -81,7 +71,7 @@ export default function OrderConfirmation() {
               <p className="text-sm text-gray-500">Numéro de commande</p>
               <p className="font-semibold">#{orderNumber}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={copyTrackingNumber}>
+            <Button variant="outline" size="sm" onClick={handleCopyOrderId}>
               <Copy className="h-4 w-4 mr-2" />
               Copier
             </Button>
@@ -160,7 +150,7 @@ export default function OrderConfirmation() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => navigate('/')}
+            onClick={() => router.push('/')}
           >
             Retour à l'accueil
           </Button>

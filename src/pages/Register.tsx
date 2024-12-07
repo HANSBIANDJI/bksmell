@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +9,7 @@ import { Mail, Lock, User, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function Register() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -133,7 +134,7 @@ export default function Register() {
         description: "Votre compte a été créé avec succès"
       });
 
-      navigate('/profile');
+      router.push('/profile');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -290,7 +291,7 @@ export default function Register() {
 
           <p className="text-center text-sm text-gray-600">
             Déjà un compte ?{' '}
-            <Link to="/login" className="text-purple-600 hover:text-purple-700">
+            <Link href="/login" className="text-purple-600 hover:text-purple-700">
               Se connecter
             </Link>
           </p>

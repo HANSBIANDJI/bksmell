@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -6,7 +6,7 @@ import { ShoppingBag, Minus, Plus, X, ArrowRight } from "lucide-react";
 import { useCart } from '@/contexts/CartContext';
 
 export default function Commande() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { items, updateQuantity, removeFromCart, getTotalPrice } = useCart();
 
   const subtotal = getTotalPrice();
@@ -14,11 +14,11 @@ export default function Commande() {
   const total = subtotal + deliveryFee;
 
   const handleCheckout = () => {
-    navigate('/checkout', { replace: true });
+    router.push('/checkout');
   };
 
   const handleContinueShopping = () => {
-    navigate('/parfums', { replace: true });
+    router.push('/parfums');
   };
 
   return (

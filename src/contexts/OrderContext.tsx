@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { useUserStore } from '@/stores/globalStore';
 import { useToast } from '@/components/ui/use-toast';
 import { socketManager } from '@/lib/socket';
@@ -46,7 +46,7 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const setCurrentOrder = useUserStore(state => state.setCurrentOrder);
 
@@ -137,7 +137,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Rediriger vers la page de confirmation avec l'état de la commande
-      navigate('/order-confirmation', { 
+      router.push('/order-confirmation', { 
         state: { order: newOrder },
         replace: true 
       });

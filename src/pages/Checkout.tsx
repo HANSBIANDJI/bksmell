@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { useOrder } from '@/contexts/OrderContext';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -78,7 +78,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function Checkout() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { createOrder } = useOrder();
   const { toast } = useToast();
   const { items, getTotalPrice, clearCart } = useCart();
@@ -106,7 +106,7 @@ export default function Checkout() {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Votre panier est vide</h2>
           <p className="text-gray-600 mb-8">Ajoutez des articles à votre panier pour passer commande</p>
-          <Button onClick={() => navigate('/')}>
+          <Button onClick={() => router.push('/')}>
             Retourner à la boutique
           </Button>
         </div>
@@ -160,7 +160,7 @@ export default function Checkout() {
         description: "Votre commande a été enregistrée avec succès"
       });
       
-      navigate('/order-history');
+      router.push('/order-history');
     } catch (error) {
       console.error('Erreur lors de la création de la commande:', error);
       toast({

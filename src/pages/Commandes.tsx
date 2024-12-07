@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import { useOrder } from '@/contexts/OrderContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export default function Commandes() {
+  const router = useRouter();
   const { orders } = useOrder();
 
   if (orders.length === 0) {
@@ -18,8 +20,8 @@ export default function Commandes() {
           </div>
           <h2 className="text-2xl font-bold mb-4">Aucune commande</h2>
           <p className="text-gray-600 mb-8">Vous n'avez pas encore passé de commande</p>
-          <Button onClick={() => window.location.href = '/'}>
-            Découvrir nos produits
+          <Button onClick={() => router.push('/parfums')}>
+            Découvrir nos parfums
           </Button>
         </div>
       </div>

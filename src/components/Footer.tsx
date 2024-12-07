@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, Twitter } from "lucide-react";
@@ -35,22 +35,22 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Navigation</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/parfums" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link href="/parfums" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Nos Parfums
                 </Link>
               </li>
               <li>
-                <Link to="/nouveautes" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link href="/nouveautes" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Nouveautés
                 </Link>
               </li>
               <li>
-                <Link to="/promotions" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link href="/promotions" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Promotions
                 </Link>
               </li>
               <li>
-                <Link to="/favoris" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link href="/favoris" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Favoris
                 </Link>
               </li>
@@ -89,16 +89,16 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t">
           <div className="grid gap-4 md:grid-cols-2">
             <p className="text-sm text-gray-600 text-center md:text-left">
-              © {currentYear} BABISMELL. Tous droits réservés.
+              {currentYear} BABISMELL. Tous droits réservés.
             </p>
             <div className="flex flex-wrap justify-center md:justify-end gap-4">
-              <Link to="/mentions-legales" className="text-sm text-gray-600 hover:text-purple-600">
+              <Link href="/mentions-legales" className="text-sm text-gray-600 hover:text-purple-600">
                 Mentions légales
               </Link>
-              <Link to="/confidentialite" className="text-sm text-gray-600 hover:text-purple-600">
+              <Link href="/confidentialite" className="text-sm text-gray-600 hover:text-purple-600">
                 Politique de confidentialité
               </Link>
-              <Link to="/cgv" className="text-sm text-gray-600 hover:text-purple-600">
+              <Link href="/cgv" className="text-sm text-gray-600 hover:text-purple-600">
                 CGV
               </Link>
             </div>

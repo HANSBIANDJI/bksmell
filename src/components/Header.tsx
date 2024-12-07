@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Search, ShoppingBag, Heart, Menu, X, User, Home, Package, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from '@/contexts/CartContext';
@@ -54,16 +54,16 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link to="/" className="font-bold text-xl sm:text-2xl">
+          <Link href="/" className="font-bold text-xl sm:text-2xl">
             PUFF
           </Link>
 
           {/* Navigation Desktop */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/parfums" className="text-sm font-medium hover:text-purple-600 transition-colors">
+            <Link href="/parfums" className="text-sm font-medium hover:text-purple-600 transition-colors">
               Nos Parfums
             </Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-purple-600 transition-colors">
+            <Link href="/contact" className="text-sm font-medium hover:text-purple-600 transition-colors">
               Contact
             </Link>
           </nav>
@@ -107,7 +107,7 @@ export default function Header() {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-4">
-              <Link to="/favoris">
+              <Link href="/favoris">
                 <Button variant="ghost" size="icon" className="relative">
                   <Heart className="h-4 w-4" />
                   {favorites.length > 0 && (
@@ -117,7 +117,7 @@ export default function Header() {
                   )}
                 </Button>
               </Link>
-              <Link to="/panier">
+              <Link href="/panier">
                 <Button variant="ghost" size="icon" className="relative">
                   <ShoppingBag className="h-4 w-4" />
                   {getTotalItems() > 0 && (
@@ -146,7 +146,7 @@ export default function Header() {
                       {menuItems.map((item) => (
                         <SheetClose asChild key={item.path}>
                           <Link
-                            to={item.path}
+                            href={item.path}
                             className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition-colors"
                           >
                             <item.icon className="h-5 w-5 text-gray-500" />

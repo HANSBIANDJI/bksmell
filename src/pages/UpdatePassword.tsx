@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,10 @@ export default function UpdatePassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const { token } = router.query;
   const { updatePassword } = useAuth();
   const { toast } = useToast();
-
-  const token = searchParams.get('token');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +51,7 @@ export default function UpdatePassword() {
 
     try {
       await updatePassword(token, password);
-      navigate('/login');
+      router.push('/login');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -128,7 +126,7 @@ export default function UpdatePassword() {
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => navigate('/login')}
+              onClick={() => router.push('/login')}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour à la connexion

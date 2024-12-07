@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,7 @@ export default function ResetPassword() {
   const [isEmailSent, setIsEmailSent] = useState(false);
   const { resetPassword } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +83,7 @@ export default function ResetPassword() {
                 type="button"
                 variant="ghost"
                 className="w-full"
-                onClick={() => navigate('/login')}
+                onClick={() => router.push('/login')}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Retour à la connexion
@@ -107,7 +108,7 @@ export default function ResetPassword() {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/login')}
+                onClick={() => router.push('/login')}
               >
                 Retour à la connexion
               </Button>

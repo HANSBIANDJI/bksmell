@@ -30,7 +30,10 @@ export interface Perfume {
   price: number;
   image: string;
   category: string;
+  isNew?: boolean;
   isOnSale?: boolean;
   discount?: number;
+  createdAt: string;
+  updatedAt: string;
   active: boolean;
 }

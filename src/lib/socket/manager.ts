@@ -1,10 +1,10 @@
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { SOCKET_CONFIG } from './config';
 import { SocketMessage, SocketInstance } from './types';
 
 class SocketManager implements SocketInstance {
   private static instance: SocketManager;
-  public socket = null;
+  public socket: Socket | null = null;
   private messageQueue: SocketMessage[] = [];
   private reconnectTimer: NodeJS.Timeout | null = null;
   private listeners: Map<string, Set<Function>> = new Map();

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { perfumes } from '@/data/perfumes';
 
 interface SearchFilters {
@@ -13,7 +13,6 @@ interface SearchFilters {
 }
 
 export function useSearch(searchTerm: string, filters: SearchFilters = {}) {
-  const [results, setResults] = useState(perfumes);
   const [isLoading, setIsLoading] = useState(false);
 
   const filteredResults = useMemo(() => {

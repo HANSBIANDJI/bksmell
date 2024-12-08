@@ -5,13 +5,12 @@ export const SOCKET_CONFIG: SocketConfig = {
   options: {
     autoConnect: false,
     reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 2000,
-    timeout: 45000,
-    transports: ['polling', 'websocket'],
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 10000,
+    transports: ['websocket'],
     path: '/socket.io/',
     withCredentials: true,
-    forceNew: true,
-    rejectUnauthorized: false
+    forceNew: true
   }
 };

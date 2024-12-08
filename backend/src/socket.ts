@@ -1,15 +1,18 @@
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
+import { Server as HttpServer } from 'http';
 import { prisma } from './lib/prisma';
 
-export function initializeSocket(io: Server) {
-  // CORS configuration
-  io.engine.on("initial_headers", (headers: any, req: any) => {
-    headers["Access-Control-Allow-Origin"] = "*";
-    headers["Access-Control-Allow-Credentials"] = "true";
+export function initializeSocket(server: HttpServer) {
+  const io = new Server(server, {
+    cors: {
+      origin: process.env.CLIENT_URL || 'http://localhost:3000',
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
   });
 
   // Connection handling with error management
-  io.on('connection', async (socket: Socket) => {
+  io.on('connection', async (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
     try {
@@ -54,6 +57,26 @@ export function initializeSocket(io: Server) {
       }
     });
 
+    // Handle order updates
+    socket.on('orderUpdate', async (data) => {
+      try {
+        const { orderId, status } = data;
+        io.emit(`order:${orderId}`, { status });
+      } catch (error) {
+        console.error('Order update error:', error);
+      }
+    });
+
+    // Handle payment status updates
+    socket.on('paymentUpdate', async (data) => {
+      try {
+        const { orderId, status } = data;
+        io.emit(`payment:${orderId}`, { status });
+      } catch (error) {
+        console.error('Payment update error:', error);
+      }
+    });
+
     // Handle disconnection
     socket.on('disconnect', (reason) => {
       console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
@@ -69,4 +92,6 @@ export function initializeSocket(io: Server) {
   io.engine.on('connection_error', (error: Error) => {
     console.error('Connection error:', error);
   });
+
+  return io;
 }

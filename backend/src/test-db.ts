@@ -2,40 +2,51 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function testConnection() {
+async function main() {
   try {
-    // Test database connection
-    await prisma.$connect();
-    console.log('✅ Successfully connected to the database');
+    // Create categories
+    const categories = await Promise.all([
+      prisma.category.create({
+        data: {
+          name: 'Floral',
+          description: 'Floral fragrances',
+        },
+      }),
+      prisma.category.create({
+        data: {
+          name: 'Woody',
+          description: 'Woody fragrances',
+        },
+      }),
+    ]);
 
-    // Test creating a category
-    const category = await prisma.category.create({
-      data: {
-        name: 'Test Category',
-        description: 'Test Description'
-      }
-    });
-    console.log('✅ Successfully created test category:', category);
+    // Create perfumes
+    await Promise.all([
+      prisma.perfume.create({
+        data: {
+          name: 'Rose Garden',
+          description: 'A beautiful floral scent',
+          brand: 'Luxury Scents',
+          price: 99.99,
+          categoryId: categories[0].id,
+          imageUrl: 'https://example.com/rose-garden.jpg',
+          stock: 100,
+        },
+      }),
+      prisma.perfume.create({
+        data: {
+          name: 'Cedar Woods',
+          description: 'A deep woody fragrance',
+          brand: 'Nature\'s Best',
+          price: 129.99,
+          categoryId: categories[1].id,
+          imageUrl: 'https://example.com/cedar-woods.jpg',
+          stock: 50,
+        },
+      }),
+    ]);
 
-    // Test creating a perfume
-    const perfume = await prisma.perfume.create({
-      data: {
-        name: 'Test Perfume',
-        brand: 'Test Brand',
-        price: 99.99,
-        image: 'https://example.com/test.jpg',
-        categoryId: category.id,
-        description: 'Test Description',
-        stock: 10
-      }
-    });
-    console.log('✅ Successfully created test perfume:', perfume);
-
-    // Clean up test data
-    await prisma.perfume.delete({ where: { id: perfume.id } });
-    await prisma.category.delete({ where: { id: category.id } });
-    console.log('✅ Successfully cleaned up test data');
-
+    console.log('Test data seeded successfully');
   } catch (error) {
     console.error('❌ Database test failed:', error);
   } finally {
@@ -43,4 +54,4 @@ async function testConnection() {
   }
 }
 
-testConnection();
+main();

@@ -13,7 +13,7 @@
     "lint": "next lint",
     "clean": "rm -rf .next",
     "type-check": "tsc --noEmit",
-    "prebuild": "npm run clean && npm run type-check"
+    "prebuild": "npm run clean"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

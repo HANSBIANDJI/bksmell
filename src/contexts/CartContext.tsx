@@ -6,7 +6,7 @@ interface CartItem {
   quantity: number;
   price: number;
   name: string;
-  brand: string;
+  brand?: string;
   image: string;
 }
 
@@ -25,7 +25,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const { products } = useAdmin();
+  const { featuredProducts: products } = useAdmin();
 
   // Load cart from localStorage
   useEffect(() => {

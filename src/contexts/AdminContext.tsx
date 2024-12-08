@@ -11,6 +11,10 @@ interface Product {
   price: number;
   imageUrl: string;
   active: boolean;
+  isOnSale?: boolean;
+  discount?: number;
+  brand?: string;
+  image?: string;
 }
 
 interface HeroSlide {

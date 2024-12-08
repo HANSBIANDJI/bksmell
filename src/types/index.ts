@@ -21,3 +21,16 @@ export interface MediaUploadResponse {
   url: string;
   thumbnailUrl?: string;
 }
+
+export interface Perfume {
+  id: string;
+  name: string;
+  brand: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  isOnSale?: boolean;
+  discount?: number;
+  active: boolean;
+}

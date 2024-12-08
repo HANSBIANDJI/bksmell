@@ -19,6 +19,11 @@ interface AuthContextType {
   updatePassword: (token: string, newPassword: string) => Promise<void>;
 }
 
+interface ResetToken {
+  token: string;
+  expiry: number;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -79,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const resetToken = Math.random().toString(36).substring(2, 15);
       
       // Sauvegarder le token dans localStorage (en production, ceci serait fait côté serveur)
-      const resetTokens = JSON.parse(localStorage.getItem('resetTokens') || '{}');
+      const resetTokens = JSON.parse(localStorage.getItem('resetTokens') || '{}') as Record<string, ResetToken>;
       resetTokens[email] = {
         token: resetToken,
         expiry: Date.now() + 3600000 // 1 heure
@@ -107,8 +112,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updatePassword = async (token: string, newPassword: string) => {
     try {
       // Vérifier le token
-      const resetTokens = JSON.parse(localStorage.getItem('resetTokens') || '{}');
-      const tokenEntry = Object.entries(resetTokens).find(([_, value]: any) => value.token === token);
+      const resetTokens = JSON.parse(localStorage.getItem('resetTokens') || '{}') as Record<string, ResetToken>;
+      const tokenEntry = Object.entries(resetTokens).find(([_, value]) => value.token === token);
 
       if (!tokenEntry || Date.now() > tokenEntry[1].expiry) {
         throw new Error('Token invalide ou expiré');

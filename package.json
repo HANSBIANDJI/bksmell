@@ -2,11 +2,18 @@
   "name": "parfumerie-next",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next",
+    "type-check": "tsc --noEmit",
+    "prebuild": "npm run clean && npm run type-check"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

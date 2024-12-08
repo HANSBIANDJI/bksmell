@@ -19,6 +19,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -28,6 +34,7 @@
     "allowJs": true,
     "incremental": true,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "plugins": [
       {
         "name": "next"
@@ -35,13 +42,11 @@
     ]
   },
   "include": [
+    "next-env.d.ts",
     "src",
+    "**/*.ts",
+    "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ],
   "exclude": [
     "node_modules"

@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../lib/prisma';
+
+const prisma = new PrismaClient();
 
 export async function login(req: Request, res: Response) {
   try {
@@ -19,13 +21,13 @@ export async function login(req: Request, res: Response) {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET || 'default-secret',
       { expiresIn: '24h' }
     );
 
-    res.json({ token, user: { ...user, password: undefined } });
+    return res.json({ token, user: { ...user, password: undefined } });
   } catch (error) {
-    res.status(500).json({ error: 'Error logging in' });
+    return res.status(500).json({ error: 'Error logging in', error });
   }
 }
 
@@ -45,26 +47,33 @@ export async function register(req: Request, res: Response) {
         password: hashedPassword,
         firstName,
         lastName,
-        phone
+        phone,
+        role: 'USER'
       }
     });
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET || 'default-secret',
       { expiresIn: '24h' }
     );
 
-    res.status(201).json({ token, user: { ...user, password: undefined } });
+    return res.status(201).json({ token, user: { ...user, password: undefined } });
   } catch (error) {
-    res.status(500).json({ error: 'Error creating user' });
+    return res.status(500).json({ error: 'Error creating user', error });
   }
 }
 
 export async function getProfile(req: Request, res: Response) {
   try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+      where: { id: userId },
       include: {
         addresses: true,
         orders: {
@@ -83,9 +92,9 @@ export async function getProfile(req: Request, res: Response) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ ...user, password: undefined });
+    return res.json({ ...user, password: undefined });
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching profile' });
+    return res.status(500).json({ error: 'Error fetching profile', error });
   }
 }
 
@@ -93,13 +102,19 @@ export async function updateProfile(req: Request, res: Response) {
   try {
     const { firstName, lastName, phone } = req.body;
 
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const user = await prisma.user.update({
-      where: { id: req.user.id },
+      where: { id: userId },
       data: { firstName, lastName, phone }
     });
 
-    res.json({ ...user, password: undefined });
+    return res.json({ ...user, password: undefined });
   } catch (error) {
-    res.status(500).json({ error: 'Error updating profile' });
+    return res.status(500).json({ error: 'Error updating profile', error });
   }
 }

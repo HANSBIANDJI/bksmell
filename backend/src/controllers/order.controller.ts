@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import { PrismaClient, OrderStatus } from '@prisma/client';
 
-export async function createOrder(req: Request, res: Response) {
+const prisma = new PrismaClient();
+
+export async function createOrder(req: Request, res: Response): Promise<void> {
   try {
     const { items, shippingAddress, deliveryFee } = req.body;
 
@@ -42,7 +44,7 @@ export async function createOrder(req: Request, res: Response) {
   }
 }
 
-export async function getOrders(req: Request, res: Response) {
+export async function getOrders(_req: Request, res: Response): Promise<void> {
   try {
     const orders = await prisma.order.findMany({
       include: {
@@ -62,7 +64,7 @@ export async function getOrders(req: Request, res: Response) {
   }
 }
 
-export async function getOrderById(req: Request, res: Response) {
+export async function getOrderById(req: Request, res: Response): Promise<void> {
   try {
     const order = await prisma.order.findUnique({
       where: { id: req.params.id },
@@ -86,12 +88,17 @@ export async function getOrderById(req: Request, res: Response) {
   }
 }
 
-export async function updateOrderStatus(req: Request, res: Response) {
+export async function updateOrderStatus(req: Request, res: Response): Promise<void> {
   try {
+    const { id } = req.params;
     const { status } = req.body;
 
+    if (!Object.values(OrderStatus).includes(status)) {
+      return res.status(400).json({ error: 'Invalid order status' });
+    }
+
     const order = await prisma.order.update({
-      where: { id: req.params.id },
+      where: { id },
       data: { status },
       include: {
         items: {
@@ -109,7 +116,7 @@ export async function updateOrderStatus(req: Request, res: Response) {
   }
 }
 
-export async function cancelOrder(req: Request, res: Response) {
+export async function cancelOrder(req: Request, res: Response): Promise<void> {
   try {
     const order = await prisma.order.update({
       where: { id: req.params.id },

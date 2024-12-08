@@ -1,68 +1,118 @@
 import { Request, Response } from 'express';
-import { PerfumeModel } from '../models/perfume.model';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function getAllPerfumes(req: Request, res: Response) {
   try {
-    const { page = 1, limit = 10, category, search } = req.query;
+    const { page = 1, limit = 10, search, categoryId } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    const where = {
-      ...(category && { categoryId: category }),
-      ...(search && {
-        OR: [
-          { name: { contains: search as string, mode: 'insensitive' } },
-          { description: { contains: search as string, mode: 'insensitive' } },
-        ],
-      }),
-    };
+    const where: any = {};
 
-    const perfumes = await PerfumeModel.findAll({
+    if (search && typeof search === 'string') {
+      where.OR = [
+        {
+          name: {
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          description: {
+            contains: search,
+            mode: 'insensitive'
+          }
+        }
+      ];
+    }
+
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+
+    const perfumes = await prisma.perfume.findMany({
       skip,
       take: Number(limit),
       where,
+      include: {
+        category: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
-    res.json(perfumes);
+    return res.json(perfumes);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching perfumes' });
+    return res.status(500).json({ message: 'Error fetching perfumes', error });
   }
 }
 
 export async function getPerfumeById(req: Request, res: Response) {
   try {
-    const perfume = await PerfumeModel.findById(req.params.id);
+    const { id } = req.params;
+
+    const perfume = await prisma.perfume.findUnique({
+      where: { id },
+      include: {
+        category: true
+      }
+    });
+
     if (!perfume) {
-      return res.status(404).json({ error: 'Perfume not found' });
+      return res.status(404).json({ message: 'Perfume not found' });
     }
-    res.json(perfume);
+
+    return res.json(perfume);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching perfume' });
+    return res.status(500).json({ message: 'Error fetching perfume', error });
   }
 }
 
 export async function createPerfume(req: Request, res: Response) {
   try {
-    const perfume = await PerfumeModel.create(req.body);
-    res.status(201).json(perfume);
+    const perfume = await prisma.perfume.create({
+      data: req.body,
+      include: {
+        category: true
+      }
+    });
+
+    return res.status(201).json(perfume);
   } catch (error) {
-    res.status(500).json({ error: 'Error creating perfume' });
+    return res.status(500).json({ message: 'Error creating perfume', error });
   }
 }
 
 export async function updatePerfume(req: Request, res: Response) {
   try {
-    const perfume = await PerfumeModel.update(req.params.id, req.body);
-    res.json(perfume);
+    const { id } = req.params;
+
+    const perfume = await prisma.perfume.update({
+      where: { id },
+      data: req.body,
+      include: {
+        category: true
+      }
+    });
+
+    return res.json(perfume);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating perfume' });
+    return res.status(500).json({ message: 'Error updating perfume', error });
   }
 }
 
 export async function deletePerfume(req: Request, res: Response) {
   try {
-    await PerfumeModel.delete(req.params.id);
-    res.status(204).send();
+    const { id } = req.params;
+
+    await prisma.perfume.delete({
+      where: { id }
+    });
+
+    return res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: 'Error deleting perfume' });
+    return res.status(500).json({ message: 'Error deleting perfume', error });
   }
 }

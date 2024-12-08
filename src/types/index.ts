@@ -22,6 +22,43 @@ export interface MediaUploadResponse {
   thumbnailUrl?: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  role: 'USER' | 'ADMIN';
+  orders?: Order[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  user: User;
+  status: OrderStatus;
+  items: OrderItem[];
+  total: number;
+  deliveryFee: number;
+  shipping: ShippingInfo;
+  shippingAddress: Address;
+  payment: Payment;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  order: Order;
+  perfumeId: string;
+  perfume: Perfume;
+  quantity: number;
+  price: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Perfume {
   id: string;
   name: string;
@@ -29,11 +66,77 @@ export interface Perfume {
   description: string;
   price: number;
   image: string;
-  category: string;
-  isNew?: boolean;
-  isOnSale?: boolean;
-  discount?: number;
+  categoryId?: string;
+  category?: Category;
+  isNew: boolean;
+  isOnSale: boolean;
+  orderItems?: OrderItem[];
   createdAt: string;
   updatedAt: string;
-  active: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  perfumes: Perfume[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Payment {
+  id: string;
+  orderId: string;
+  order: Order;
+  amount: number;
+  status: PaymentStatus;
+  provider: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Address {
+  id: string;
+  orderId: string;
+  order: Order;
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShippingInfo {
+  id: string;
+  orderId: string;
+  order: Order;
+  method: ShippingMethod;
+  trackingNo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
+export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
+export type ShippingMethod = 'STANDARD' | 'EXPRESS';
+
+export interface OrderContextType {
+  orders: Order[];
+  createOrder: (order: Partial<Order>) => Promise<Order>;
+  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<Order>;
+  getOrderById: (orderId: string) => Promise<Order>;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface AdminContextType {
+  perfumes: Perfume[];
+  addPerfume: (perfume: Partial<Perfume>) => Promise<Perfume>;
+  updatePerfume: (id: string, perfume: Partial<Perfume>) => Promise<Perfume>;
+  deletePerfume: (id: string) => Promise<void>;
+  updateHeroSlides: (slides: HeroSlide[]) => Promise<void>;
+  loginAdmin: (credentials: { email: string; password: string }) => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }

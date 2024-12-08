@@ -2,33 +2,41 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 // Basic authentication middleware
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
+export const auth = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ message: 'No auth token' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
     req.user = decoded;
-    next();
+
+    return next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid authentication token' });
+    return res.status(401).json({ message: 'Please authenticate' });
   }
 };
 
 // Simplified middleware just for admin access
-export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const adminKey = req.header('X-Admin-Key');
-    
-    if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
-      return res.status(403).json({ error: 'Accès non autorisé' });
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ message: 'No auth token' });
     }
 
-    next();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as { role: string };
+
+    if (decoded.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    req.user = decoded;
+    return next();
   } catch (error) {
-    res.status(500).json({ error: 'Erreur d\'authentification' });
+    return res.status(401).json({ message: 'Please authenticate as admin' });
   }
 };

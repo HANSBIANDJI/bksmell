@@ -13,6 +13,28 @@
     }
   ],
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://api.parfumerie.vercel.app"
-  }
+    "NEXT_PUBLIC_API_URL": "https://api.parfumerie.vercel.app",
+    "NEXT_PUBLIC_SOCKET_URL": "wss://api.parfumerie.vercel.app",
+    "NODE_ENV": "production"
+  },
+  "regions": ["cdg1"],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,HEAD,PUT,PATCH,POST,DELETE"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+        }
+      ]
+    }
+  ]
 }

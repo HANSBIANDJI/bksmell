@@ -141,7 +141,7 @@ export const useGlobalStore = create<GlobalStoreState>()(
       },
 
       initializeSocket: () => {
-        socketManager.connect();
+        socketManager.connect('https://your-socket-url.com'); // replace with your socket url
 
         const countdownCleanup = socketManager.on('countdownUpdate', (countdown: Countdown) => {
           set({ countdown });

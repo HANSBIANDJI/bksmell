@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 export function useOrderNotifications() {
   const [orders, setOrders] = useState<any[]>([]);
   const { toast } = useToast();
-  const { socket, on, off } = useSocket();
+  const { socket, emit, on, off } = useSocket();
   const notificationSound = new Audio('/notification.mp3');
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function useOrderNotifications() {
   }, [socket, toast, on, off]);
 
   const updateOrderStatus = (orderId: string, status: string) => {
-    socket.emit('updateOrderStatus', { orderId, status });
+    emit('updateOrderStatus', { orderId, status });
   };
 
   return {

@@ -78,30 +78,35 @@ class SocketManager {
   }
 
   public emit(event: string, data: any) {
-    if (this.socket?.connected) {
-      this.socket.emit(event, data);
-    } else {
+    if (!this.socket) {
+      console.warn('Socket not connected, adding to queue:', { event, data });
       this.messageQueue.push({ event, data });
+      return;
     }
+    this.socket.emit(event, data);
   }
 
   public on(event: string, callback: (...args: any[]) => void) {
-    this.socket?.on(event, callback);
+    if (!this.socket) {
+      console.warn('Socket not connected, event listener will be added when connected:', event);
+      return;
+    }
+    this.socket.on(event, callback);
   }
 
   public off(event: string, callback: (...args: any[]) => void) {
-    this.socket?.off(event, callback);
+    if (!this.socket) return;
+    this.socket.off(event, callback);
   }
 }
 
 export const socketManager = SocketManager.getInstance();
-export const socket = socketManager.getSocket();
 
 export function useSocket() {
   return {
     socket: socketManager.getSocket(),
-    emit: socketManager.emit.bind(socketManager),
-    on: socketManager.on.bind(socketManager),
-    off: socketManager.off.bind(socketManager),
+    emit: (event: string, data: any) => socketManager.emit(event, data),
+    on: (event: string, callback: (...args: any[]) => void) => socketManager.on(event, callback),
+    off: (event: string, callback: (...args: any[]) => void) => socketManager.off(event, callback),
   };
 }

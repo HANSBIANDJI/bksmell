@@ -11,7 +11,8 @@ export const perfumes: Perfume[] = [
     description: 'Une fragrance florale lumineuse aux notes de rose et de jasmin',
     isNew: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    active: true
   },
   {
     id: '2',
@@ -24,6 +25,7 @@ export const perfumes: Perfume[] = [
     isOnSale: true,
     discount: 20,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    active: true
   }
 ];

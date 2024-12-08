@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 class SocketManager {
   private static instance: SocketManager;
@@ -23,116 +23,85 @@ class SocketManager {
   }
 
   private connect() {
-    if (this.socket?.connected) {
-      console.log('Socket already connected');
-      return;
-    }
-
-    this.socket = io(SOCKET_URL, {
-      autoConnect: false,
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: this.reconnectDelay,
-      timeout: 20000,
-      path: '/socket.io',
-      withCredentials: true,
-      forceNew: true
-    });
-
-    this.socket.connect();
-
-    console.log('Attempting to connect to socket server at:', SOCKET_URL);
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error details:', {
-        error: error.message,
-        type: error.type,
-        description: error.description
+    try {
+      this.socket = io(SOCKET_URL, {
+        transports: ['websocket'],
+        reconnection: true,
       });
-    });
+    } catch (error) {
+      console.error('Socket connection error:', error);
+    }
+  }
+
+  public getSocket(): Socket | null {
+    return this.socket;
   }
 
   private setupListeners() {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('Socket connected successfully');
+      console.log('Socket connected');
       this.reconnectAttempts = 0;
       this.processMessageQueue();
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
-      if (reason === 'io server disconnect') {
-        setTimeout(() => this.connect(), 5000);
-      }
+    this.socket.on('disconnect', () => {
+      console.log('Socket disconnected');
+      this.attemptReconnect();
     });
+
+    this.socket.on('error', (error) => {
+      console.error('Socket error:', error);
+    });
+  }
+
+  private attemptReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('Max reconnection attempts reached');
+      return;
+    }
+
+    setTimeout(() => {
+      this.reconnectAttempts++;
+      this.connect();
+    }, this.reconnectDelay * this.reconnectAttempts);
   }
 
   private processMessageQueue() {
     while (this.messageQueue.length > 0) {
       const message = this.messageQueue.shift();
-      if (message && this.socket?.connected) {
+      if (message && this.socket) {
         this.socket.emit(message.event, message.data);
       }
     }
   }
 
-  public disconnect() {
+  public emit(event: string, data: any) {
     if (this.socket?.connected) {
-      this.socket.disconnect();
-      this.socket = null;
-      console.log('Socket disconnected');
+      this.socket.emit(event, data);
+    } else {
+      this.messageQueue.push({ event, data });
     }
   }
 
   public on(event: string, callback: (...args: any[]) => void) {
-    if (!this.socket) {
-      console.error('Socket not initialized');
-      return () => {};
-    }
-
-    this.socket.on(event, callback);
-    return () => {
-      if (this.socket) {
-        this.socket.off(event, callback);
-      }
-    };
+    this.socket?.on(event, callback);
   }
 
-  public async emit(event: string, data: any): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this.socket?.connected) {
-        console.error('Socket not connected');
-        this.messageQueue.push({ event, data });
-        this.connect();
-        reject(new Error('Socket not connected'));
-        return;
-      }
-
-      try {
-        this.socket.emit(event, data, () => {
-          resolve();
-        });
-      } catch (error) {
-        console.error(`Error emitting ${event}:`, error);
-        reject(error);
-      }
-    });
-  }
-
-  public isConnected(): boolean {
-    return this.socket?.connected || false;
+  public off(event: string, callback: (...args: any[]) => void) {
+    this.socket?.off(event, callback);
   }
 }
 
 export const socketManager = SocketManager.getInstance();
+export const socket = socketManager.getSocket();
 
 export function useSocket() {
   return {
-    socket: socketManager,
-    isConnected: socketManager.isConnected(),
-    connect: () => socketManager.connect(),
-    disconnect: () => socketManager.disconnect()
+    socket: socketManager.getSocket(),
+    emit: socketManager.emit.bind(socketManager),
+    on: socketManager.on.bind(socketManager),
+    off: socketManager.off.bind(socketManager),
   };
 }

@@ -1,38 +1,45 @@
 import { useState, useEffect } from 'react';
-import { socket } from '@/lib/socket';
+import { useSocket } from '@/lib/socket';
 import { useToast } from '@/components/ui/use-toast';
 
 export function useOrderNotifications() {
   const [orders, setOrders] = useState<any[]>([]);
   const { toast } = useToast();
+  const { socket, on, off } = useSocket();
   const notificationSound = new Audio('/notification.mp3');
 
   useEffect(() => {
-    // Connexion au serveur Socket.IO
-    socket.connect();
+    if (!socket) return;
 
-    // Écouter les nouvelles commandes
-    socket.on('newOrder', (order) => {
+    const handleNewOrder = (order: any) => {
       setOrders(prev => [order, ...prev]);
       notificationSound.play();
       toast({
         title: "Nouvelle commande !",
         description: `Commande #${order.id} reçue`,
       });
-    });
-
-    // Écouter les mises à jour de statut
-    socket.on('orderStatusUpdated', ({ orderId, status }) => {
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status } : order
-      ));
-    });
-
-    // Nettoyage
-    return () => {
-      socket.disconnect();
     };
-  }, []);
+
+    const handleOrderUpdate = (updatedOrder: any) => {
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === updatedOrder.id ? updatedOrder : order
+        )
+      );
+      toast({
+        title: "Commande mise à jour",
+        description: `Commande #${updatedOrder.id} a été mise à jour`,
+      });
+    };
+
+    on('newOrder', handleNewOrder);
+    on('orderUpdate', handleOrderUpdate);
+
+    return () => {
+      off('newOrder', handleNewOrder);
+      off('orderUpdate', handleOrderUpdate);
+    };
+  }, [socket, toast, on, off]);
 
   const updateOrderStatus = (orderId: string, status: string) => {
     socket.emit('updateOrderStatus', { orderId, status });

@@ -1,70 +1,94 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../lib/prisma';
+import { Role } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
-export async function login(req: Request, res: Response) {
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'default-secret',
-      { expiresIn: '24h' }
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '1d' }
     );
 
-    return res.json({ token, user: { ...user, password: undefined } });
+    const { password: _, ...userWithoutPassword } = user;
+
+    return res.json({ token, user: userWithoutPassword });
   } catch (error) {
-    return res.status(500).json({ error: 'Error logging in', error });
+    console.error('Login error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
 
-export async function register(req: Request, res: Response) {
+export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, phone } = req.body;
+    const { email, password, name } = req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already in use' });
+      return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        firstName,
-        lastName,
-        phone,
-        role: 'USER'
-      }
+        name,
+        role: Role.USER,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'default-secret',
+      process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
-    return res.status(201).json({ token, user: { ...user, password: undefined } });
+    return res.status(201).json({ user, token });
   } catch (error) {
-    return res.status(500).json({ error: 'Error creating user', error });
+    console.error('Registration error:', error);
+    return res.status(500).json({ error: 'Error registering user' });
   }
-}
+};
 
-export async function getProfile(req: Request, res: Response) {
+export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
 
@@ -80,12 +104,12 @@ export async function getProfile(req: Request, res: Response) {
           include: {
             items: {
               include: {
-                perfume: true
-              }
-            }
-          }
-        }
-      }
+                perfume: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -94,27 +118,34 @@ export async function getProfile(req: Request, res: Response) {
 
     return res.json({ ...user, password: undefined });
   } catch (error) {
-    return res.status(500).json({ error: 'Error fetching profile', error });
+    console.error('Get profile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
 
-export async function updateProfile(req: Request, res: Response) {
+export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, phone } = req.body;
-
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const { id } = req.params;
+    const { name, email } = req.body;
 
     const user = await prisma.user.update({
-      where: { id: userId },
-      data: { firstName, lastName, phone }
+      where: { id },
+      data: {
+        name,
+        email,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
-    return res.json({ ...user, password: undefined });
+    return res.json(user);
   } catch (error) {
-    return res.status(500).json({ error: 'Error updating profile', error });
+    console.error('Update profile error:', error);
+    return res.status(500).json({ error: 'Error updating profile' });
   }
-}
+};

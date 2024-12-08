@@ -40,7 +40,7 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 };
 
-export const getOrders = async (req: Request, res: Response) => {
+export const getOrders = async (_req: Request, res: Response) => {
   try {
     const orders = await prisma.order.findMany({
       include: {

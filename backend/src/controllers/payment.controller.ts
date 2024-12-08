@@ -65,7 +65,7 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
     // Create payment record
     const payment = await prisma.payment.create({
       data: {
-        orderId,
+        orderId: Number(orderId),
         amount,
         status: PaymentStatus.PENDING,
         paymentIntentId: paymentIntent.id,
@@ -97,8 +97,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       process.env.STRIPE_WEBHOOK_SECRET || ''
     );
 
-    let result;
-
     switch (event.type) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
@@ -110,13 +108,13 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
         if (payment) {
           // Update payment status
-          result = await prisma.payment.update({
+          const result = await prisma.payment.update({
             where: { id: payment.id },
             data: { status: PaymentStatus.SUCCEEDED },
           });
+          return res.json({ received: true, result });
         }
-
-        return res.json({ received: true, result });
+        return res.json({ received: true });
       }
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
@@ -128,17 +126,16 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
         if (payment) {
           // Update payment status
-          result = await prisma.payment.update({
+          const result = await prisma.payment.update({
             where: { id: payment.id },
             data: { status: PaymentStatus.FAILED },
           });
+          return res.json({ received: true, result });
         }
-
-        return res.json({ received: true, result });
+        return res.json({ received: true });
       }
-      default: {
+      default:
         return res.json({ received: true, message: 'Unhandled event type' });
-      }
     }
   } catch (error) {
     console.error('Stripe webhook error:', error);

@@ -2,28 +2,63 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { OrderStatus } from '@prisma/client';
 
+interface OrderItem {
+  perfumeId: string;
+  quantity: number;
+  price: number;
+}
+
+interface ShippingAddress {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { userId, items, total, deliveryFee, shippingAddress } = req.body;
+    const { userId, items, shippingAddress, deliveryFee } = req.body as {
+      userId: string;
+      items: OrderItem[];
+      shippingAddress: ShippingAddress;
+      deliveryFee: number;
+    };
+
+    // Calculate total from items
+    const total = items.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
 
     const order = await prisma.order.create({
       data: {
-        userId: Number(userId),
-        total,
-        deliveryFee,
+        total, // Now correctly typed as Float
+        deliveryFee, // Now correctly typed as Float
         status: OrderStatus.PENDING,
+        user: {
+          connect: { id: userId }
+        },
         items: {
-          create: items.map((item: any) => ({
-            perfumeId: item.perfumeId,
+          create: items.map((item) => ({
             quantity: item.quantity,
-            price: item.price,
+            price: item.price, // Now correctly typed as Float
+            perfume: {
+              connect: { id: item.perfumeId }
+            }
           })),
         },
         shippingAddress: {
-          create: shippingAddress,
+          create: {
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            zipCode: shippingAddress.zipCode,
+            country: shippingAddress.country,
+          },
         },
       },
       include: {
+        user: true,
         items: {
           include: {
             perfume: true,
@@ -33,7 +68,7 @@ export const createOrder = async (req: Request, res: Response) => {
       },
     });
 
-    return res.status(201).json(order);
+    return res.json(order);
   } catch (error) {
     console.error('Create order error:', error);
     return res.status(500).json({ error: 'Error creating order' });
@@ -44,13 +79,13 @@ export const getOrders = async (_req: Request, res: Response) => {
   try {
     const orders = await prisma.order.findMany({
       include: {
+        user: true,
         items: {
           include: {
             perfume: true,
           },
         },
         shippingAddress: true,
-        payment: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -69,15 +104,15 @@ export const getOrderById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const order = await prisma.order.findUnique({
-      where: { id: Number(id) },
+      where: { id },
       include: {
+        user: true,
         items: {
           include: {
             perfume: true,
           },
         },
         shippingAddress: true,
-        payment: true,
       },
     });
 
@@ -87,7 +122,7 @@ export const getOrderById = async (req: Request, res: Response) => {
 
     return res.json(order);
   } catch (error) {
-    console.error('Get order by id error:', error);
+    console.error('Get order error:', error);
     return res.status(500).json({ error: 'Error fetching order' });
   }
 };
@@ -95,19 +130,19 @@ export const getOrderById = async (req: Request, res: Response) => {
 export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status } = req.body as { status: OrderStatus };
 
     const order = await prisma.order.update({
-      where: { id: Number(id) },
+      where: { id },
       data: { status },
       include: {
+        user: true,
         items: {
           include: {
             perfume: true,
           },
         },
         shippingAddress: true,
-        payment: true,
       },
     });
 
@@ -120,17 +155,19 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
 export const cancelOrder = async (req: Request, res: Response) => {
   try {
+    const { id } = req.params;
+
     const order = await prisma.order.update({
-      where: { id: Number(req.params.id) },
+      where: { id },
       data: { status: OrderStatus.CANCELLED },
       include: {
+        user: true,
         items: {
           include: {
             perfume: true,
           },
         },
         shippingAddress: true,
-        payment: true,
       },
     });
 

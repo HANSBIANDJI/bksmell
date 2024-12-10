@@ -11,6 +11,40 @@ export default function Commandes() {
   const router = useRouter();
   const { orders } = useOrder();
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'text-yellow-500';
+      case 'processing':
+        return 'text-blue-500';
+      case 'shipped':
+        return 'text-purple-500';
+      case 'delivered':
+        return 'text-green-500';
+      case 'cancelled':
+        return 'text-red-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'En attente';
+      case 'processing':
+        return 'En cours';
+      case 'shipped':
+        return 'Expédié';
+      case 'delivered':
+        return 'Livré';
+      case 'cancelled':
+        return 'Annulé';
+      default:
+        return status;
+    }
+  };
+
   if (orders.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-purple-50 to-white">
@@ -54,16 +88,8 @@ export default function Commandes() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                      ${order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : ''}
-                      ${order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' : ''}
-                      ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : ''}
-                      ${order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : ''}
-                    `}>
-                      {order.status === 'PENDING' && 'En attente'}
-                      {order.status === 'CONFIRMED' && 'Confirmée'}
-                      {order.status === 'DELIVERED' && 'Livrée'}
-                      {order.status === 'CANCELLED' && 'Annulée'}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                      {getStatusLabel(order.status)}
                     </span>
                   </div>
                 </div>

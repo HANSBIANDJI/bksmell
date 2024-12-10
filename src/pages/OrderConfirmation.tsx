@@ -1,20 +1,58 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { motion } from 'framer-motion';
-import { CheckCircle2, Package, Truck, MapPin, Clock, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useParams } from 'react-router-dom';
+import { Order } from '@/types';
+import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useCart } from '@/contexts/CartContext';
 import { useUserStore } from '@/stores/globalStore';
 
-export default function OrderConfirmation() {
+interface OrderConfirmationProps {
+  orderId?: string;
+}
+
+export default function OrderConfirmation({ orderId: propOrderId }: OrderConfirmationProps) {
   const router = useRouter();
+  const { orderId: paramOrderId } = useParams<{ orderId: string }>();
   const { toast } = useToast();
   const { clearCart } = useCart();
   const currentOrder = useUserStore((state) => state.currentOrder);
   const setCurrentOrder = useUserStore((state) => state.setCurrentOrder);
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const finalOrderId = propOrderId || paramOrderId;
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!finalOrderId) {
+        setError('No order ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/orders/${finalOrderId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch order');
+        }
+        const data = await response.json();
+        setOrder(data);
+      } catch (err) {
+        setError('Error fetching order details');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [finalOrderId]);
 
   useEffect(() => {
     if (!currentOrder) {
@@ -29,12 +67,34 @@ export default function OrderConfirmation() {
     };
   }, [currentOrder, router, clearCart, setCurrentOrder]);
 
-  // Si pas de commande, ne rien afficher pendant la redirection
-  if (!currentOrder) {
-    return null;
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  const orderNumber = String(currentOrder.id).padStart(4, '0');
+  if (error || !order) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-6">
+          <div className="text-center">
+            <h1 className="mb-4 text-2xl font-semibold text-red-600">Error</h1>
+            <p className="text-gray-600">{error || 'Order not found'}</p>
+            <Button
+              className="mt-4"
+              onClick={() => window.location.href = '/'}
+            >
+              Return to Home
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const orderNumber = String(order.id).padStart(4, '0');
 
   const handleCopyOrderId = () => {
     navigator.clipboard.writeText(orderNumber);
@@ -44,118 +104,123 @@ export default function OrderConfirmation() {
     });
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'text-yellow-500';
+      case 'processing':
+        return 'text-blue-500';
+      case 'shipped':
+        return 'text-purple-500';
+      case 'delivered':
+        return 'text-green-500';
+      case 'cancelled':
+        return 'text-red-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'En attente';
+      case 'processing':
+        return 'En cours';
+      case 'shipped':
+        return 'Expédié';
+      case 'delivered':
+        return 'Livré';
+      case 'cancelled':
+        return 'Annulé';
+      default:
+        return status;
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto px-4 py-8 max-w-2xl"
-    >
-      <Card className="p-6 space-y-6">
-        <div className="text-center space-y-4">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <CheckCircle2 className="mx-auto h-16 w-16 text-green-500" />
-          </motion.div>
-          <h1 className="text-2xl font-bold">Commande confirmée !</h1>
-          <p className="text-gray-600">
-            Merci pour votre commande. Voici les détails de votre achat.
-          </p>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="p-6">
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-3xl font-bold text-primary">Order Confirmed!</h1>
+          <p className="text-gray-600">Thank you for your purchase</p>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-500">Numéro de commande</p>
-              <p className="font-semibold">#{orderNumber}</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleCopyOrderId}>
-              <Copy className="h-4 w-4 mr-2" />
-              Copier
-            </Button>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <h2 className="font-semibold">Statut de la commande</h2>
-            <div className="grid gap-4">
-              <div className="flex items-start gap-4">
-                <Package className="h-5 w-5 text-purple-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Commande reçue</p>
-                  <p className="text-sm text-gray-500">
-                    Nous avons bien reçu votre commande
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <Truck className="h-5 w-5 text-purple-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Livraison</p>
-                  <p className="text-sm text-gray-500">
-                    {currentOrder.shipping.method}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <MapPin className="h-5 w-5 text-purple-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Adresse de livraison</p>
-                  <p className="text-sm text-gray-500">
-                    {currentOrder.shipping.address}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <Clock className="h-5 w-5 text-purple-500 mt-0.5" />
-                <div>
-                  <p className="font-medium">Délai estimé</p>
-                  <p className="text-sm text-gray-500">
-                    {currentOrder.shipping.estimatedDelivery}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
+        <div className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold">Order Details</h2>
           <div className="space-y-2">
-            <h2 className="font-semibold">Récapitulatif</h2>
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>Sous-total</span>
-                <span>{(currentOrder.total - currentOrder.deliveryFee).toLocaleString()} FCFA</span>
+            <p>
+              <span className="font-medium">Order ID:</span> {order.id}
+            </p>
+            <p>
+              <span className="font-medium">Status:</span>{' '}
+              <span className="capitalize">{order.status.toLowerCase()}</span>
+            </p>
+            <p>
+              <span className="font-medium">Date:</span>{' '}
+              {new Date(order.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold">Shipping Address</h2>
+          <div className="space-y-1">
+            <p>{order.shippingAddress?.street}</p>
+            <p>
+              {order.shippingAddress?.city}, {order.shippingAddress?.state}{' '}
+              {order.shippingAddress?.postalCode}
+            </p>
+            <p>{order.shippingAddress?.country}</p>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold">Order Summary</h2>
+          <div className="space-y-4">
+            {order.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between border-b pb-4"
+              >
+                <div>
+                  <p className="font-medium">{item.perfume.name}</p>
+                  <p className="text-sm text-gray-600">
+                    Quantity: {item.quantity}
+                  </p>
+                </div>
+                <p className="font-medium">
+                  {formatPrice(item.price * item.quantity)}
+                </p>
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Livraison</span>
-                <span>{currentOrder.deliveryFee.toLocaleString()} FCFA</span>
-              </div>
-              <Separator className="my-2" />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>{currentOrder.total.toLocaleString()} FCFA</span>
-              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatPrice(order.total)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Shipping</span>
+              <span>{formatPrice(order.deliveryFee)}</span>
+            </div>
+            <div className="flex justify-between border-t pt-2 text-lg font-bold">
+              <span>Total</span>
+              <span>{formatPrice(order.total + order.deliveryFee)}</span>
             </div>
           </div>
         </div>
 
-        <div className="pt-4">
+        <div className="text-center">
           <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => router.push('/')}
+            className="min-w-[200px]"
+            onClick={() => window.location.href = '/'}
           >
-            Retour à l'accueil
+            Continue Shopping
           </Button>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }

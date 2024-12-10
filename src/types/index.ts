@@ -25,14 +25,16 @@ export interface MediaUploadResponse {
 export interface User {
   id: string;
   email: string;
-  name?: string;
-  role: 'USER' | 'ADMIN';
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  role: 'CLIENT' | 'ADMIN';
   orders?: Order[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
 export type ShippingMethod = 'STANDARD' | 'EXPRESS';
 

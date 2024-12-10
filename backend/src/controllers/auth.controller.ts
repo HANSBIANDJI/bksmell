@@ -53,11 +53,10 @@ export const register = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ error: 'Email already exists' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
       data: {
@@ -75,13 +74,7 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-
-    return res.status(201).json({ user, token });
+    return res.status(201).json({ message: 'User registered successfully', user });
   } catch (error) {
     console.error('Registration error:', error);
     return res.status(500).json({ error: 'Error registering user' });
@@ -98,11 +91,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
+      include: {
         orders: {
           include: {
             items: {

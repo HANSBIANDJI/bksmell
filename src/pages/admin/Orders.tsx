@@ -14,20 +14,20 @@ import { useToast } from '@/components/ui/use-toast';
 import { useOrder } from '@/contexts/OrderContext';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-const statusColors = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PROCESSING: 'bg-blue-100 text-blue-800',
-  SHIPPING: 'bg-purple-100 text-purple-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800'
+const STATUS_COLORS = {
+  pending: 'text-yellow-500',
+  processing: 'text-blue-500',
+  shipped: 'text-purple-500',
+  delivered: 'text-green-500',
+  cancelled: 'text-red-500',
 };
 
-const statusLabels = {
-  PENDING: 'En attente',
-  PROCESSING: 'En préparation',
-  SHIPPING: 'En livraison',
-  COMPLETED: 'Livrée',
-  CANCELLED: 'Annulée'
+const STATUS_LABELS = {
+  pending: 'En attente',
+  processing: 'En cours',
+  shipped: 'Expédié',
+  delivered: 'Livré',
+  cancelled: 'Annulé',
 };
 
 export default function AdminOrders() {
@@ -86,8 +86,8 @@ export default function AdminOrders() {
         return `${order.total.toLocaleString()} FCFA`;
       case 'status':
         return (
-          <Badge className={statusColors[order.status]}>
-            {statusLabels[order.status]}
+          <Badge className={STATUS_COLORS[order.status]}>
+            {STATUS_LABELS[order.status]}
           </Badge>
         );
       case 'actions':
@@ -131,8 +131,8 @@ export default function AdminOrders() {
               <p className="text-sm text-gray-500">Client: {order.shippingAddress.fullName}</p>
               <p className="text-sm text-gray-500">Date: {format(new Date(order.createdAt), 'PPp', { locale: fr })}</p>
               <p className="text-sm text-gray-500">Total: {order.total.toLocaleString()} FCFA</p>
-              <Badge className={statusColors[order.status]}>
-                {statusLabels[order.status]}
+              <Badge className={STATUS_COLORS[order.status]}>
+                {STATUS_LABELS[order.status]}
               </Badge>
               <Button
                 variant="ghost"
@@ -210,7 +210,7 @@ export default function AdminOrders() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(statusLabels).map(([key, label]) => (
+                      {Object.entries(STATUS_LABELS).map(([key, label]) => (
                         <SelectItem key={key} value={key}>
                           {label}
                         </SelectItem>

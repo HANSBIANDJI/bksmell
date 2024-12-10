@@ -7,8 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-10-16',
 });
 
-// Ces fonctions sont des placeholders - à implémenter avec votre logique de paiement
-export async function getPaymentMethods(req: Request, res: Response) {
+export async function getPaymentMethods(_req: Request, res: Response) {
   try {
     const methods = [
       {
@@ -45,9 +44,9 @@ export async function getPaymentMethods(req: Request, res: Response) {
       }
     ];
 
-    res.json(methods);
+    return res.json(methods);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching payment methods' });
+    return res.status(500).json({ error: 'Error fetching payment methods' });
   }
 }
 
@@ -55,21 +54,20 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
   try {
     const { orderId, amount } = req.body;
 
-    // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: 'eur',
+      amount: Math.round(amount * 100), // Convert to cents and ensure it's an integer
+      currency: 'xof',
+      payment_method_types: ['card'],
       metadata: { orderId },
     });
 
-    // Create payment record
     const payment = await prisma.payment.create({
       data: {
-        orderId: Number(orderId),
-        amount,
+        orderId,
+        amount: amount.toString(), // Convert to string as per Prisma schema
         status: PaymentStatus.PENDING,
-        paymentIntentId: paymentIntent.id,
         provider: 'stripe',
+        paymentIntentId: paymentIntent.id,
       },
     });
 
@@ -83,83 +81,94 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
   }
 };
 
-export const handleStripeWebhook = async (req: Request, res: Response) => {
-  const sig = req.headers['stripe-signature'];
+const handlePaymentSuccess = async (session: Stripe.PaymentIntent) => {
+  const payment = await prisma.payment.findFirst({
+    where: { paymentIntentId: session.id },
+  });
 
-  if (!sig) {
-    return res.status(400).json({ error: 'No signature found' });
-  }
+  if (payment) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: PaymentStatus.SUCCEEDED },
+    });
 
-  try {
-    const event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET || ''
-    );
-
-    switch (event.type) {
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
-        // Find payment by paymentIntentId
-        const payment = await prisma.payment.findFirst({
-          where: { paymentIntentId: paymentIntent.id },
-        });
-
-        if (payment) {
-          // Update payment status
-          const result = await prisma.payment.update({
-            where: { id: payment.id },
-            data: { status: PaymentStatus.SUCCEEDED },
-          });
-          return res.json({ received: true, result });
-        }
-        return res.json({ received: true });
-      }
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
-        // Find payment by paymentIntentId
-        const payment = await prisma.payment.findFirst({
-          where: { paymentIntentId: paymentIntent.id },
-        });
-
-        if (payment) {
-          // Update payment status
-          const result = await prisma.payment.update({
-            where: { id: payment.id },
-            data: { status: PaymentStatus.FAILED },
-          });
-          return res.json({ received: true, result });
-        }
-        return res.json({ received: true });
-      }
-      default:
-        return res.json({ received: true, message: 'Unhandled event type' });
-    }
-  } catch (error) {
-    console.error('Stripe webhook error:', error);
-    return res.status(400).json({ error: 'Webhook error' });
+    await prisma.order.update({
+      where: { id: payment.orderId },
+      data: { status: 'PROCESSING' },
+    });
   }
 };
 
-export async function confirmPayment(req: Request, res: Response) {
+const handlePaymentFailure = async (session: Stripe.PaymentIntent) => {
+  const payment = await prisma.payment.findFirst({
+    where: { paymentIntentId: session.id },
+  });
+
+  if (payment) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: PaymentStatus.FAILED },
+    });
+
+    await prisma.order.update({
+      where: { id: payment.orderId },
+      data: { status: 'CANCELLED' },
+    });
+  }
+};
+
+export const handleWebhook = async (req: Request, res: Response) => {
+  try {
+    const sig = req.headers['stripe-signature'];
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig as string,
+        process.env.STRIPE_WEBHOOK_SECRET as string
+      );
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${(err as Error).message}`);
+    }
+
+    const session = event.data.object as Stripe.PaymentIntent;
+
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await handlePaymentSuccess(session);
+        break;
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailure(session);
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
+    return res.json({ received: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return res.status(500).json({ error: 'Webhook handler failed' });
+  }
+};
+
+export const confirmPayment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Confirmer le paiement avec votre fournisseur de paiement
-    const paymentIntent = await prisma.payment.update({
+    const payment = await prisma.payment.update({
       where: { id },
       data: { status: PaymentStatus.SUCCEEDED }
     });
 
-    res.json(paymentIntent);
+    return res.json(payment);
   } catch (error) {
-    res.status(500).json({ error: 'Error confirming payment' });
+    console.error('Confirm payment error:', error);
+    return res.status(500).json({ error: 'Error confirming payment' });
   }
-}
+};
 
-export async function getPaymentStatus(req: Request, res: Response) {
+export const getPaymentStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -171,8 +180,26 @@ export async function getPaymentStatus(req: Request, res: Response) {
       return res.status(404).json({ error: 'Payment intent not found' });
     }
 
-    res.json(paymentIntent);
+    return res.json(paymentIntent);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching payment status' });
+    return res.status(500).json({ error: 'Error fetching payment status' });
   }
-}
+};
+
+export const getPaymentById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const payment = await prisma.payment.findUnique({
+      where: { id }
+    });
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    return res.json(payment);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error fetching payment' });
+  }
+};

@@ -10,7 +10,10 @@ import {
   CheckCircle2, 
   AlertCircle,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Truck,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,27 +24,12 @@ import { useOrder } from '@/contexts/OrderContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const orderStatuses = {
-  'PENDING': {
-    label: 'En attente',
-    color: 'bg-yellow-100 text-yellow-800',
-    icon: AlertCircle
-  },
-  'PROCESSING': {
-    label: 'En préparation',
-    color: 'bg-blue-100 text-blue-800',
-    icon: Clock
-  },
-  'SHIPPING': {
-    label: 'En livraison',
-    color: 'bg-purple-100 text-purple-800',
-    icon: Package
-  },
-  'COMPLETED': {
-    label: 'Livrée',
-    color: 'bg-green-100 text-green-800',
-    icon: CheckCircle2
-  }
+const ORDER_STATUS = {
+  pending: { label: 'En attente', color: 'text-yellow-500', icon: Clock },
+  processing: { label: 'En cours', color: 'text-blue-500', icon: RefreshCw },
+  shipped: { label: 'Expédié', color: 'text-purple-500', icon: Truck },
+  delivered: { label: 'Livré', color: 'text-green-500', icon: CheckCircle },
+  cancelled: { label: 'Annulé', color: 'text-red-500', icon: XCircle },
 };
 
 export default function OrderHistory() {
@@ -128,7 +116,7 @@ export default function OrderHistory() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les statuts</SelectItem>
-                      {Object.entries(orderStatuses).map(([key, { label }]) => (
+                      {Object.entries(ORDER_STATUS).map(([key, { label }]) => (
                         <SelectItem key={key} value={key}>{label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -166,7 +154,7 @@ export default function OrderHistory() {
               className="space-y-4"
             >
               {filteredOrders.map((order) => {
-                const StatusIcon = orderStatuses[order.status].icon;
+                const StatusIcon = ORDER_STATUS[order.status].icon;
                 const orderNumber = String(order.id).padStart(4, '0');
                 
                 return (
@@ -180,15 +168,15 @@ export default function OrderHistory() {
                     <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-start sm:items-center gap-4">
-                          <div className={`p-2 rounded-full ${orderStatuses[order.status].color} hidden sm:block`}>
+                          <div className={`p-2 rounded-full ${ORDER_STATUS[order.status].color} hidden sm:block`}>
                             <StatusIcon className="h-5 w-5" />
                           </div>
                           
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold">Commande #{orderNumber}</h3>
-                              <Badge className={orderStatuses[order.status].color}>
-                                {orderStatuses[order.status].label}
+                              <Badge className={ORDER_STATUS[order.status].color}>
+                                {ORDER_STATUS[order.status].label}
                               </Badge>
                             </div>
                             

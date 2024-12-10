@@ -98,8 +98,11 @@ export const getProfile = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        addresses: true,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
         orders: {
           include: {
             items: {
@@ -107,6 +110,11 @@ export const getProfile = async (req: Request, res: Response) => {
                 perfume: true,
               },
             },
+            shippingAddress: true,
+            payment: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -116,10 +124,10 @@ export const getProfile = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    return res.json({ ...user, password: undefined });
+    return res.json(user);
   } catch (error) {
     console.error('Get profile error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Error fetching profile' });
   }
 };
 

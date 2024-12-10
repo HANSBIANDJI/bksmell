@@ -4,7 +4,7 @@ export interface HeroSlide {
   description: string;
   mediaType: 'image' | 'video';
   mediaUrl: string;
-  thumbnailUrl?: string; // For video preview
+  thumbnailUrl?: string;
   buttonText: string;
   buttonLink: string;
   order: number;
@@ -26,23 +26,26 @@ export interface User {
   id: string;
   email: string;
   name?: string;
-  role: 'USER' | 'ADMIN' | 'CLIENT';
+  role: 'USER' | 'ADMIN';
   orders?: Order[];
   createdAt: string;
   updatedAt: string;
 }
 
+export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
+export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
+export type ShippingMethod = 'STANDARD' | 'EXPRESS';
+
 export interface Order {
   id: string;
   userId: string;
   user: User;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED';
+  status: OrderStatus;
   items: OrderItem[];
   total: number;
   deliveryFee: number;
-  shipping: ShippingInfo;
   shippingAddress: Address;
-  payment: Payment;
+  payment?: Payment;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,7 +91,7 @@ export interface Payment {
   orderId: string;
   order: Order;
   amount: number;
-  status: 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
+  status: PaymentStatus;
   provider: string;
   createdAt: string;
   updatedAt: string;
@@ -111,7 +114,7 @@ export interface ShippingInfo {
   id: string;
   orderId: string;
   order: Order;
-  method: 'STANDARD' | 'EXPRESS';
+  method: ShippingMethod;
   trackingNo?: string;
   createdAt: string;
   updatedAt: string;
@@ -120,7 +123,7 @@ export interface ShippingInfo {
 export interface OrderContextType {
   orders: Order[];
   createOrder: (order: Partial<Order>) => Promise<Order>;
-  updateOrderStatus: (orderId: string, status: 'PENDING' | 'PROCESSING' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED') => Promise<Order>;
+  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<Order>;
   getOrderById: (orderId: string) => Promise<Order>;
   loading: boolean;
   error: string | null;
@@ -128,17 +131,11 @@ export interface OrderContextType {
 
 export interface AdminContextType {
   products: Perfume[];
-  perfumes: Perfume[];
   addProduct: (product: Partial<Perfume>) => Promise<Perfume>;
-  addPerfume: (perfume: Partial<Perfume>) => Promise<Perfume>;
   updateProduct: (id: string, product: Partial<Perfume>) => Promise<Perfume>;
-  updatePerfume: (id: string, perfume: Partial<Perfume>) => Promise<Perfume>;
   deleteProduct: (id: string) => Promise<void>;
-  deletePerfume: (id: string) => Promise<void>;
-  updateHeroSlides: (slides: HeroSlide[] | (() => HeroSlide[])) => Promise<void>;
+  updateHeroSlides: (slides: HeroSlide[]) => Promise<void>;
   loginAdmin: (credentials: { email: string; password: string }) => Promise<void>;
-  email: string;
-  password: string;
   loading: boolean;
   error: string | null;
 }

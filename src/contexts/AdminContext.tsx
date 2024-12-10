@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
+import { HeroSlide } from '@/types';
 
 interface Product {
   id: string;
@@ -17,19 +18,9 @@ interface Product {
   image?: string;
 }
 
-interface HeroSlide {
-  id: string;
-  title: string;
-  description: string;
-  mediaUrl: string;
-  mediaType: 'image' | 'video';
-  active: boolean;
-  order: number;
-}
-
 interface AdminContextType {
   isAdmin: boolean;
-  login: (password: string) => void;
+  login: (password: string) => Promise<void>;
   logout: () => void;
   featuredProducts: Product[];
   heroSlides: HeroSlide[];
@@ -37,7 +28,7 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType>({
   isAdmin: false,
-  login: () => {},
+  login: async () => {},
   logout: () => {},
   featuredProducts: [],
   heroSlides: [],
@@ -94,6 +85,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         mediaType: 'image',
         active: true,
         order: 1,
+        buttonText: 'Découvrir',
+        buttonLink: '/collections/summer',
       },
       {
         id: '2',
@@ -103,6 +96,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         mediaType: 'image',
         active: true,
         order: 2,
+        buttonText: 'Explorer',
+        buttonLink: '/new-arrivals',
       },
       {
         id: '3',
@@ -112,11 +107,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         mediaType: 'video',
         active: true,
         order: 3,
+        buttonText: 'Voir la collection',
+        buttonLink: '/collections/exclusive',
       },
     ]);
   }, []);
 
-  const login = (password: string) => {
+  const login = async (password: string) => {
     if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
       setIsAdmin(true);
       localStorage.setItem('isAdmin', 'true');
@@ -151,4 +148,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAdmin = () => useContext(AdminContext);
+export const useAdmin = () => {
+  const context = useContext(AdminContext);
+  if (context === undefined) {
+    throw new Error('useAdmin must be used within an AdminProvider');
+  }
+  return context;
+};

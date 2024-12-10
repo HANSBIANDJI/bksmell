@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/contexts/AdminContext';
+import { HeroSlide } from '@/types';
 
 interface HeroCarouselProps {
   onDiscoverClick: () => void;
@@ -14,7 +15,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
   const { heroSlides } = useAdmin();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const activeSlides = heroSlides.filter(slide => slide.active).sort((a, b) => a.order - b.order);
+  const activeSlides = (heroSlides || []).filter((slide: HeroSlide) => slide.active).sort((a, b) => a.order - b.order);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -23,7 +24,9 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
 
     const currentMedia = activeSlides[currentSlide];
     if (currentMedia.mediaType === 'video' && videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(error => {
+        console.error('Error playing video:', error);
+      });
       return;
     }
 
@@ -32,7 +35,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [activeSlides.length, currentSlide, isPlaying]);
+  }, [activeSlides, currentSlide, isPlaying]);
 
   const handlePrevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
@@ -48,7 +51,9 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        videoRef.current.play().catch(error => {
+          console.error('Error playing video:', error);
+        });
       }
     }
   };
@@ -77,6 +82,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
             alt={currentMedia.title}
             className="object-cover"
             fill
+            priority
           />
         )}
         <div className="absolute inset-0 bg-black/30" />
@@ -93,7 +99,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
           onClick={onDiscoverClick}
           className="px-8 py-3 bg-white text-black rounded-full hover:bg-gray-100 transition-colors"
         >
-          Découvrir
+          {currentMedia.buttonText}
         </button>
       </div>
 
@@ -106,6 +112,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
               index === currentSlide ? 'bg-white' : 'bg-white/50'
             )}
             onClick={() => setCurrentSlide(index)}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
@@ -113,6 +120,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
       <button
         onClick={handlePrevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+        aria-label="Previous slide"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
@@ -120,6 +128,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
       <button
         onClick={handleNextSlide}
         className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+        aria-label="Next slide"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
@@ -127,6 +136,7 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
       <button
         onClick={togglePlayPause}
         className="absolute bottom-4 right-4 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+        aria-label={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
       >
         {isPlaying ? (
           <Pause className="w-6 h-6" />

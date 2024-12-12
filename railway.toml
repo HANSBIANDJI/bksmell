@@ -1,12 +1,2 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm install && npm run build"
-
-[deploy]
-startCommand = "npm run start"
-healthcheckPath = "/"
-healthcheckTimeout = 100
-restartPolicyType = "ON_FAILURE"
-
-[phases.setup]
-nixPkgs = ["nodejs_18", "npm-9_x"]
+directory = "backend"

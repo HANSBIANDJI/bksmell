@@ -4,9 +4,9 @@ buildCommand = "npm install && npm run build"
 
 [deploy]
 startCommand = "npm run start"
-healthcheckPath = "/api/health"
+healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 
 [phases.setup]
-nixPkgs = ["nodejs_18", "npm-9_x"]
+nixPkgs = ["nodejs", "npm"]

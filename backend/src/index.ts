@@ -35,7 +35,7 @@ app.use('/api', routes);
 app.use(errorHandler);
 
 // Add health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   const healthcheck = {
     uptime: process.uptime(),
     message: 'OK',

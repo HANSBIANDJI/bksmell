@@ -1,7 +1,5 @@
-# Use Node.js LTS version
 FROM node:18-slim
 
-# Create app directory
 WORKDIR /app
 
 # Copy package files

@@ -34,6 +34,16 @@ app.use(express.json());
 app.use('/api', routes);
 app.use(errorHandler);
 
+// Add health check endpoint
+app.get('/health', (req, res) => {
+  const healthcheck = {
+    uptime: process.uptime(),
+    message: 'OK',
+    timestamp: Date.now()
+  };
+  res.send(healthcheck);
+});
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
@@ -61,14 +71,35 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
+    console.log('Starting server initialization...');
+    
+    // Verify environment variables
+    const requiredEnvVars = ['DATABASE_URL'];
+    const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+    
+    if (missingEnvVars.length > 0) {
+      throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+    }
+
+    console.log('Attempting database connection...');
     await prisma.$connect();
-    console.log('Connected to database');
+    console.log('Successfully connected to database');
     
     httpServer.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`Health check endpoint available at /health`);
+      console.log(`Frontend URL configured as: ${process.env.FRONTEND_URL || '*'}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
+    // Log additional details about the error
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     process.exit(1);
   }
 };

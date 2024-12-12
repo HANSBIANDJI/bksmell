@@ -1,10 +1,10 @@
 [build]
 directory = "backend"
 builder = "nixpacks"
-buildCommand = "cd backend && npm install && npx prisma generate && npm run build"
+buildCommand = "cd /app/backend && npm install && npx prisma generate && npm run build"
 
 [deploy]
-startCommand = "cd backend && npm start"
+startCommand = "cd /app/backend && npm start"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"

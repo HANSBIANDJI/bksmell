@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build": "cd server && npm install && npm run build",
+    "start": "cd server && node dist/index.js",
+    "dev": "ts-node src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",

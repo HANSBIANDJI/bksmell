@@ -7,123 +7,141 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String
-  name            String?
-  role            Role      @default(USER)
-  orders          Order[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-}
-
-model Order {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  status          OrderStatus @default(PENDING)
-  items           OrderItem[]
-  total           Float
-  deliveryFee     Float
-  shipping        ShippingInfo?
-  shippingAddress Address?
-  payment         Payment?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-}
-
-model OrderItem {
-  id          String    @id @default(cuid())
-  orderId     String
-  order       Order     @relation(fields: [orderId], references: [id])
-  perfumeId   String
-  perfume     Perfume   @relation(fields: [perfumeId], references: [id])
-  quantity    Int
-  price       Float
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Perfume {
-  id          String    @id @default(cuid())
-  name        String
-  brand       String
-  description String
-  price       Float
-  image       String
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id])
-  isNew       Boolean   @default(false)
-  isOnSale    Boolean   @default(false)
-  orderItems  OrderItem[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Category {
-  id          String    @id @default(cuid())
-  name        String
-  perfumes    Perfume[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Payment {
-  id          String    @id @default(cuid())
-  orderId     String    @unique
-  order       Order     @relation(fields: [orderId], references: [id])
-  amount      Float
-  status      PaymentStatus @default(PENDING)
-  provider    String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Address {
-  id          String    @id @default(cuid())
-  orderId     String    @unique
-  order       Order     @relation(fields: [orderId], references: [id])
-  street      String
-  city        String
-  state       String
-  country     String
-  zipCode     String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model ShippingInfo {
-  id          String    @id @default(cuid())
-  orderId     String    @unique
-  order       Order     @relation(fields: [orderId], references: [id])
-  method      ShippingMethod
-  trackingNo  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
 enum Role {
-  USER
   ADMIN
+  USER
+  CLIENT
 }
 
 enum OrderStatus {
   PENDING
   PROCESSING
-  SHIPPING
-  COMPLETED
+  SHIPPED
+  DELIVERED
   CANCELLED
 }
 
 enum PaymentStatus {
   PENDING
-  PROCESSING
   SUCCEEDED
   FAILED
+  REFUNDED
 }
 
 enum ShippingMethod {
   STANDARD
   EXPRESS
+  OVERNIGHT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  status          OrderStatus    @default(PENDING)
+  items           OrderItem[]
+  total           Float
+  deliveryFee     Float
+  shipping        ShippingInfo?
+  payment         Payment?
+  shippingAddress Address?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  perfumeId String
+  perfume   Perfume  @relation(fields: [perfumeId], references: [id])
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String       @unique
+  order           Order        @relation(fields: [orderId], references: [id])
+  amount          Float
+  status          PaymentStatus @default(PENDING)
+  provider        String?
+  paymentIntentId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model ShippingInfo {
+  id                String        @id @default(cuid())
+  orderId          String        @unique
+  order            Order         @relation(fields: [orderId], references: [id])
+  method           ShippingMethod
+  trackingNumber   String?
+  estimatedDelivery DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Perfume {
+  id          String      @id @default(cuid())
+  name        String
+  brand       String
+  description String?
+  price       Float
+  imageUrl    String?
+  stock       Int         @default(0)
+  orderItems  OrderItem[]
+  category    Category    @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  promotions  Promotion[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  perfumes    Perfume[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Promotion {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  discount    Float
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean   @default(true)
+  perfumes    Perfume[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

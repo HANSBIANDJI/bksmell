@@ -1,143 +1,51 @@
-export interface HeroSlide {
+export interface Perfume {
   id: string;
-  title: string;
+  name: string;
+  brand: string;
+  price: number;
+  image: string;
+  category: 'Pour Elle' | 'Pour Lui' | 'Unisexe';
   description: string;
-  mediaType: 'image' | 'video';
-  mediaUrl: string;
-  thumbnailUrl?: string;
-  buttonText: string;
-  buttonLink: string;
-  order: number;
-  active: boolean;
+  isNew?: boolean;
+  isOnSale?: boolean;
+  discount?: number;
+  stock?: number;
 }
 
-export interface HeroSettings {
-  slides: HeroSlide[];
-  autoplay: boolean;
-  interval: number;
+export interface Order {
+  id: string;
+  userId: string;
+  items: OrderItem[];
+  total: number;
+  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  shippingAddress: ShippingAddress;
+  deliveryFee: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface MediaUploadResponse {
-  url: string;
-  thumbnailUrl?: string;
+export interface OrderItem {
+  perfumeId: string;
+  quantity: number;
+  price: number;
+}
+
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  zone: string;
 }
 
 export interface User {
   id: string;
   email: string;
+  password: string;
+  role: 'ADMIN' | 'CLIENT';
   firstName?: string;
   lastName?: string;
   phone?: string;
-  role: 'CLIENT' | 'ADMIN';
-  orders?: Order[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
-export type ShippingMethod = 'STANDARD' | 'EXPRESS';
-
-export interface Order {
-  id: string;
-  userId: string;
-  user: User;
-  status: OrderStatus;
-  items: OrderItem[];
-  total: number;
-  deliveryFee: number;
-  shippingAddress: Address;
-  payment?: Payment;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface OrderItem {
-  id: string;
-  orderId: string;
-  order: Order;
-  perfumeId: string;
-  perfume: Perfume;
-  quantity: number;
-  price: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Perfume {
-  id: string;
-  name: string;
-  brand: string;
-  description: string;
-  price: number;
-  image: string;
-  categoryId?: string;
-  category?: Category;
-  isNew: boolean;
-  isOnSale: boolean;
-  orderItems?: OrderItem[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  perfumes: Perfume[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Payment {
-  id: string;
-  orderId: string;
-  order: Order;
-  amount: number;
-  status: PaymentStatus;
-  provider: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Address {
-  id: string;
-  orderId: string;
-  order: Order;
-  street: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ShippingInfo {
-  id: string;
-  orderId: string;
-  order: Order;
-  method: ShippingMethod;
-  trackingNo?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface OrderContextType {
-  orders: Order[];
-  createOrder: (order: Partial<Order>) => Promise<Order>;
-  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<Order>;
-  getOrderById: (orderId: string) => Promise<Order>;
-  loading: boolean;
-  error: string | null;
-}
-
-export interface AdminContextType {
-  products: Perfume[];
-  addProduct: (product: Partial<Perfume>) => Promise<Perfume>;
-  updateProduct: (id: string, product: Partial<Perfume>) => Promise<Perfume>;
-  deleteProduct: (id: string) => Promise<void>;
-  updateHeroSlides: (slides: HeroSlide[]) => Promise<void>;
-  loginAdmin: (credentials: { email: string; password: string }) => Promise<void>;
-  loading: boolean;
-  error: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

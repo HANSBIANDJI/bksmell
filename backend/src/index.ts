@@ -29,7 +29,7 @@ const io = new Server(httpServer, {
   allowEIO3: true
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Add early health check endpoint before any middleware
 app.get('/health', (_req, res) => {

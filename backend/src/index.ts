@@ -30,6 +30,7 @@ const io = new Server(httpServer, {
 });
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = '0.0.0.0';
 
 // Add early health check endpoint before any middleware
 app.get('/health', (_req, res) => {
@@ -39,6 +40,8 @@ app.get('/health', (_req, res) => {
       timestamp: Date.now(),
       uptime: process.uptime(),
       env: process.env.NODE_ENV,
+      port: PORT,
+      host: HOST,
       database: prisma ? 'connected' : 'not connected'
     };
     res.status(200).json(healthcheck);
@@ -84,31 +87,47 @@ const startServer = async () => {
     console.log('Starting server initialization...');
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Port:', PORT);
+    console.log('Host:', HOST);
     
-    // Start listening first
-    httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Health check endpoint available at /health`);
-      console.log(`Frontend URL configured as: ${process.env.FRONTEND_URL || '*'}`);
+    // Start the server first
+    await new Promise<void>((resolve, reject) => {
+      try {
+        httpServer.listen(PORT, HOST, () => {
+          console.log(`Server running at http://${HOST}:${PORT}`);
+          console.log(`Health check endpoint available at http://${HOST}:${PORT}/health`);
+          console.log(`Frontend URL configured as: ${process.env.FRONTEND_URL || '*'}`);
+          resolve();
+        });
+
+        httpServer.on('error', (err) => {
+          console.error('Server error:', err);
+          reject(err);
+        });
+      } catch (err) {
+        reject(err);
+      }
     });
 
     // Then verify environment variables
     const requiredEnvVars = ['DATABASE_URL'];
+    console.log('Checking environment variables...');
     const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
     
     if (missingEnvVars.length > 0) {
-      console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-      // Continue running but log the error
+      console.warn(`Missing environment variables: ${missingEnvVars.join(', ')}`);
+    } else {
+      console.log('All required environment variables are present');
     }
 
     // Then attempt database connection
     console.log('Attempting database connection...');
-    await prisma.$connect()
-      .then(() => console.log('Successfully connected to database'))
-      .catch(err => {
-        console.error('Failed to connect to database:', err);
-        // Continue running but log the error
-      });
+    try {
+      await prisma.$connect();
+      console.log('Successfully connected to database');
+    } catch (err) {
+      console.error('Failed to connect to database:', err);
+      // Continue running but log the error
+    }
   } catch (error) {
     console.error('Failed to start server:', error);
     if (error instanceof Error) {

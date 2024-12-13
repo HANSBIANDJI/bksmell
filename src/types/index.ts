@@ -49,3 +49,14 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface HeroSlide {
+  id: string;
+  title: string;
+  description: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  buttonText: string;
+  order: number;
+  active: boolean;
+}

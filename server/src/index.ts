@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -25,7 +25,7 @@ app.use(express.json());
 app.use(cors());
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req: Request, res: Response) => {
   console.log('Health check requested');
   res.status(200).json({
     status: 'healthy',
@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
 });
 
 // Root endpoint
-app.get('/', (req, res) => {
+app.get('/', (_req: Request, res: Response) => {
   res.status(200).json({ message: 'Server is running' });
 });
 
@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
@@ -85,13 +85,13 @@ const startServer = async () => {
 };
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', (error: Error) => {
   console.error('Uncaught Exception:', error);
   // Don't exit the process
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // Don't exit the process
 });

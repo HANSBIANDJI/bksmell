@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
 buildCommand = "cd server && npm install && npx prisma generate && npm run build"
+watchPatterns = ["server/**/*"]
 
 [deploy]
 startCommand = "cd server && NODE_ENV=production node dist/index.js"

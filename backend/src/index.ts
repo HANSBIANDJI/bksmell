@@ -7,45 +7,36 @@ import { routes } from './routes';
 import { errorHandler } from './middleware/error';
 import { prisma } from './lib/prisma';
 
+// Load environment variables
 dotenv.config();
 
+// Initialize Express app
 const app = express();
 const httpServer = createServer(app);
 
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
+// Basic CORS setup
+app.use(cors());
 
-const io = new Server(httpServer, {
-  cors: corsOptions,
-  path: '/socket.io',
-  transports: ['websocket', 'polling'],
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  connectTimeout: 45000,
-  allowEIO3: true
-});
+// Parse JSON bodies
+app.use(express.json());
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const HOST = '0.0.0.0';
-
-// Add early health check endpoint before any middleware
+// Health check endpoint (before any other middleware)
 app.get('/health', (_req, res) => {
+  console.log('Health check requested');
   try {
     const healthcheck = {
       status: 'ok',
       timestamp: Date.now(),
       uptime: process.uptime(),
       env: process.env.NODE_ENV,
-      port: PORT,
-      host: HOST,
-      database: prisma ? 'connected' : 'not connected'
+      cwd: process.cwd(),
+      port: process.env.PORT,
+      pid: process.pid
     };
+    console.log('Health check response:', healthcheck);
     res.status(200).json(healthcheck);
   } catch (error) {
+    console.error('Health check error:', error);
     res.status(503).json({
       status: 'error',
       timestamp: Date.now(),
@@ -54,91 +45,56 @@ app.get('/health', (_req, res) => {
   }
 });
 
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use('/api', routes);
-app.use(errorHandler);
+// Socket.IO setup
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || '*',
+    methods: ['GET', 'POST']
+  }
+});
 
+// Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-
-  // Handle countdown updates
-  socket.on('countdownUpdate', (countdown) => {
-    io.emit('countdownUpdate', countdown);
-  });
-
-  // Handle new orders
-  socket.on('newOrder', (order) => {
-    io.emit('newOrder', order);
-  });
-
-  // Handle order status updates
-  socket.on('updateOrderStatus', ({ orderId, status }) => {
-    io.emit('orderStatusUpdated', { orderId, status });
-  });
-
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 });
 
-const startServer = async () => {
-  try {
-    console.log('Starting server initialization...');
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('Port:', PORT);
-    console.log('Host:', HOST);
-    
-    // Start the server first
-    await new Promise<void>((resolve, reject) => {
-      try {
-        httpServer.listen(PORT, HOST, () => {
-          console.log(`Server running at http://${HOST}:${PORT}`);
-          console.log(`Health check endpoint available at http://${HOST}:${PORT}/health`);
-          console.log(`Frontend URL configured as: ${process.env.FRONTEND_URL || '*'}`);
-          resolve();
-        });
+// API routes
+app.use('/api', routes);
 
-        httpServer.on('error', (err) => {
-          console.error('Server error:', err);
-          reject(err);
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+// Error handler
+app.use(errorHandler);
 
-    // Then verify environment variables
-    const requiredEnvVars = ['DATABASE_URL'];
-    console.log('Checking environment variables...');
-    const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-    
-    if (missingEnvVars.length > 0) {
-      console.warn(`Missing environment variables: ${missingEnvVars.join(', ')}`);
-    } else {
-      console.log('All required environment variables are present');
-    }
+// Start server
+const PORT = parseInt(process.env.PORT || '3000', 10);
+console.log('Starting server...');
+console.log('Current working directory:', process.cwd());
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Port:', PORT);
 
-    // Then attempt database connection
-    console.log('Attempting database connection...');
-    try {
-      await prisma.$connect();
-      console.log('Successfully connected to database');
-    } catch (err) {
-      console.error('Failed to connect to database:', err);
-      // Continue running but log the error
-    }
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-    }
-    process.exit(1);
-  }
-};
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log('Process ID:', process.pid);
+  console.log('Environment variables:', {
+    NODE_ENV: process.env.NODE_ENV,
+    PORT: process.env.PORT,
+    DATABASE_URL: process.env.DATABASE_URL ? '[REDACTED]' : 'not set',
+    FRONTEND_URL: process.env.FRONTEND_URL || 'not set'
+  });
+});
 
-startServer();
+// Handle process errors
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Attempt database connection in the background
+prisma.$connect()
+  .then(() => console.log('Database connected successfully'))
+  .catch(err => console.error('Database connection error:', err));

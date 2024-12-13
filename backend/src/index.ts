@@ -33,13 +33,22 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Add early health check endpoint before any middleware
 app.get('/health', (_req, res) => {
-  const healthcheck = {
-    uptime: process.uptime(),
-    message: 'OK',
-    timestamp: Date.now(),
-    env: process.env.NODE_ENV
-  };
-  res.send(healthcheck);
+  try {
+    const healthcheck = {
+      status: 'ok',
+      timestamp: Date.now(),
+      uptime: process.uptime(),
+      env: process.env.NODE_ENV,
+      database: prisma ? 'connected' : 'not connected'
+    };
+    res.status(200).json(healthcheck);
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      timestamp: Date.now(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 app.use(cors(corsOptions));
@@ -76,23 +85,30 @@ const startServer = async () => {
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Port:', PORT);
     
-    // Verify environment variables
-    const requiredEnvVars = ['DATABASE_URL'];
-    const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-    
-    if (missingEnvVars.length > 0) {
-      throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
-    }
-
-    console.log('Attempting database connection...');
-    await prisma.$connect();
-    console.log('Successfully connected to database');
-    
+    // Start listening first
     httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Health check endpoint available at /health`);
       console.log(`Frontend URL configured as: ${process.env.FRONTEND_URL || '*'}`);
     });
+
+    // Then verify environment variables
+    const requiredEnvVars = ['DATABASE_URL'];
+    const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+    
+    if (missingEnvVars.length > 0) {
+      console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+      // Continue running but log the error
+    }
+
+    // Then attempt database connection
+    console.log('Attempting database connection...');
+    await prisma.$connect()
+      .then(() => console.log('Successfully connected to database'))
+      .catch(err => {
+        console.error('Failed to connect to database:', err);
+        // Continue running but log the error
+      });
   } catch (error) {
     console.error('Failed to start server:', error);
     if (error instanceof Error) {

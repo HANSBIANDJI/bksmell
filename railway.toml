@@ -4,7 +4,7 @@ builder = "nixpacks"
 buildCommand = "cd /app/backend && npm install && npx prisma generate && npm run build"
 
 [deploy]
-startCommand = "cd /app/backend && npm start"
+startCommand = "cd /app/backend && NODE_ENV=production node dist/index.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"

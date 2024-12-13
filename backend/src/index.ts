@@ -29,20 +29,23 @@ const io = new Server(httpServer, {
   allowEIO3: true
 });
 
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use('/api', routes);
-app.use(errorHandler);
+const PORT = process.env.PORT || 3000;
 
-// Add health check endpoint
+// Add early health check endpoint before any middleware
 app.get('/health', (_req, res) => {
   const healthcheck = {
     uptime: process.uptime(),
     message: 'OK',
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    env: process.env.NODE_ENV
   };
   res.send(healthcheck);
 });
+
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use('/api', routes);
+app.use(errorHandler);
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
@@ -67,11 +70,11 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-
 const startServer = async () => {
   try {
     console.log('Starting server initialization...');
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Port:', PORT);
     
     // Verify environment variables
     const requiredEnvVars = ['DATABASE_URL'];
@@ -85,14 +88,13 @@ const startServer = async () => {
     await prisma.$connect();
     console.log('Successfully connected to database');
     
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Health check endpoint available at /health`);
       console.log(`Frontend URL configured as: ${process.env.FRONTEND_URL || '*'}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
-    // Log additional details about the error
     if (error instanceof Error) {
       console.error('Error details:', {
         message: error.message,

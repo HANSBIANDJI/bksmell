@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 import { Section } from '@/components/Section';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { Categories } from '@/components/Categories';
@@ -6,8 +6,8 @@ import { FeaturedProducts } from '@/components/FeaturedProducts';
 import { Shield, Truck, Sparkles } from "lucide-react";
 
 export default function Home() {
-  const router = useRouter();
-  const handleDiscoverClick = () => router.push('/parfums');
+  const navigate = useNavigate();
+  const handleDiscoverClick = () => navigate('/parfums');
 
   return (
     <>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Order } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -15,7 +14,7 @@ interface OrderConfirmationProps {
 }
 
 export default function OrderConfirmation({ orderId: propOrderId }: OrderConfirmationProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { orderId: paramOrderId } = useParams<{ orderId: string }>();
   const { toast } = useToast();
   const { clearCart } = useCart();
@@ -56,7 +55,7 @@ export default function OrderConfirmation({ orderId: propOrderId }: OrderConfirm
 
   useEffect(() => {
     if (!currentOrder) {
-      router.push('/');
+      navigate('/');
       return;
     }
     clearCart();
@@ -65,7 +64,7 @@ export default function OrderConfirmation({ orderId: propOrderId }: OrderConfirm
       // Nettoyage lors du démontage du composant
       setCurrentOrder(null);
     };
-  }, [currentOrder, router, clearCart, setCurrentOrder]);
+  }, [currentOrder, navigate, clearCart, setCurrentOrder]);
 
   if (loading) {
     return (

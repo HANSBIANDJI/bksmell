@@ -1,18 +1,36 @@
-import Image, { ImageProps } from 'next/image';
 import { cn } from '@/lib/utils';
 
-interface OptimizedImageProps extends Omit<ImageProps, 'src'> {
+interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  className?: string;
+  priority?: boolean;
+  fill?: boolean;
 }
 
-export function OptimizedImage({ className, ...props }: OptimizedImageProps) {
+export function OptimizedImage({
+  src,
+  alt,
+  width,
+  height,
+  className = '',
+  priority = false,
+  fill = false,
+  ...props
+}: OptimizedImageProps) {
   return (
-    <div className={cn('relative overflow-hidden', className)}>
-      <Image
+    <div className={cn('relative overflow-hidden')}>
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={`${className} ${fill ? 'object-cover w-full h-full' : ''}`}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
         {...props}
-        className="object-cover"
-        quality={90}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />
     </div>
   );

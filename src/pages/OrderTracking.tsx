@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Package, Truck, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -45,8 +45,9 @@ const orderStatuses = {
 };
 
 export default function OrderTracking() {
-  const router = useRouter();
-  const { orderId } = router.query;
+  const navigate = useNavigate();
+  const params = useParams();
+  const { orderId } = params;
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

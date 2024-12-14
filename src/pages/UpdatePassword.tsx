@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +12,16 @@ export default function UpdatePassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const { token } = router.query;
+  const { token } = useAuth();
   const { updatePassword } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +57,7 @@ export default function UpdatePassword() {
 
     try {
       await updatePassword(token, password);
-      router.push('/login');
+      navigate('/login');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -62,6 +68,10 @@ export default function UpdatePassword() {
       setIsLoading(false);
     }
   };
+
+  if (!token) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white flex items-center justify-center p-4">
@@ -126,7 +136,7 @@ export default function UpdatePassword() {
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => router.push('/login')}
+              onClick={() => navigate('/login')}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Retour à la connexion

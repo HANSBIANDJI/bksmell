@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOrder } from '@/contexts/OrderContext';
 import { 
   Package, 
   Search, 
@@ -20,7 +21,6 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useOrder } from '@/contexts/OrderContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -28,17 +28,28 @@ const ORDER_STATUS = {
   pending: { label: 'En attente', color: 'text-yellow-500', icon: Clock },
   processing: { label: 'En cours', color: 'text-blue-500', icon: RefreshCw },
   shipped: { label: 'Expédié', color: 'text-purple-500', icon: Truck },
-  delivered: { label: 'Livré', color: 'text-green-500', icon: CheckCircle },
+  delivered: { label: 'Livré', color: 'text-green-500', icon: CheckCircle2 },
   cancelled: { label: 'Annulé', color: 'text-red-500', icon: XCircle },
 };
 
 export default function OrderHistory() {
-  const router = useRouter();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { orders } = useOrder();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  if (!user) {
+    return null;
+  }
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -199,7 +210,7 @@ export default function OrderHistory() {
                             variant="outline"
                             size="sm"
                             className="w-full sm:w-auto"
-                            onClick={() => router.push(`/order-tracking/${orderNumber}`)}
+                            onClick={() => navigate(`/order-tracking/${orderNumber}`)}
                           >
                             Suivre
                             <ExternalLink className="ml-2 h-4 w-4" />
@@ -252,7 +263,7 @@ export default function OrderHistory() {
                   ? "Aucune commande ne correspond à vos critères de recherche"
                   : "Vous n'avez pas encore passé de commande"}
               </p>
-              <Button onClick={() => router.push('/parfums')}>
+              <Button onClick={() => navigate('/parfums')}>
                 Découvrir nos parfums
               </Button>
             </motion.div>

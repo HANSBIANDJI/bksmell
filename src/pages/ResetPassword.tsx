@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,13 +8,13 @@ import { Card } from '@/components/ui/card';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function ResetPassword() {
+export function ResetPassword() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const { resetPassword } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,11 +23,15 @@ export default function ResetPassword() {
     try {
       await resetPassword(email);
       setIsEmailSent(true);
+      toast({
+        title: 'Email envoyé',
+        description: 'Vérifiez votre boîte mail pour réinitialiser votre mot de passe',
+      });
     } catch (error: any) {
       toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: error.message
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -83,7 +86,7 @@ export default function ResetPassword() {
                 type="button"
                 variant="ghost"
                 className="w-full"
-                onClick={() => router.push('/login')}
+                onClick={() => navigate('/login')}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Retour à la connexion
@@ -108,7 +111,7 @@ export default function ResetPassword() {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => router.push('/login')}
+                onClick={() => navigate('/login')}
               >
                 Retour à la connexion
               </Button>

@@ -1,19 +1,17 @@
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, router]);
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return null;
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

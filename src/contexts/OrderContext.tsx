@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { socketManager } from '@/lib/socket';
 import { useCart } from '@/contexts/CartContext';
@@ -39,7 +39,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   const { items: cartItems, clearCart, getTotalPrice } = useCart();
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         description: 'Vous devez être connecté pour passer une commande',
         variant: 'destructive',
       });
-      router.push('/login');
+      navigate('/login');
       return;
     }
 
@@ -97,7 +97,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       description: 'Votre commande a été passée avec succès',
     });
 
-    router.push(`/order-confirmation?orderId=${newOrder.id}`);
+    navigate(`/order-confirmation?orderId=${newOrder.id}`);
   };
 
   const getOrderById = (id: string) => {

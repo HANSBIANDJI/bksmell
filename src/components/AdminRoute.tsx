@@ -1,25 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
 
 interface AdminRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function AdminRoute({ children }: AdminRouteProps) {
   const { isAdmin } = useAdmin();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAdmin) {
-      router.push('/admin/login');
-    }
-  }, [isAdmin, router]);
 
   if (!isAdmin) {
-    return null;
+    return <Navigate to="/admin/login" replace />;
   }
 
   return <>{children}</>;

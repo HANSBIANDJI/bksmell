@@ -8,7 +8,7 @@ import { OrderProvider } from './contexts/OrderContext';
 import { AdminProvider } from './contexts/AdminContext';
 import { queryClient } from './lib/queryClient';
 import Layout from './components/Layout';
-import AdminLayout from './components/AdminLayout';
+import AdminLayout from './components/admin/AdminLayout';
 import Home from './pages/Home';
 import Parfums from './pages/Parfums';
 import Nouveautes from './pages/Nouveautes';

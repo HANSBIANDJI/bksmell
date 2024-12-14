@@ -6,7 +6,8 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "echo 'Skipping Prisma generate for development'",
+    "prisma:generate": "prisma generate",
     "build": "vite build",
     "build:server": "cd server && npm install --force && npm run build",
     "start": "cd server && node dist/index.js",

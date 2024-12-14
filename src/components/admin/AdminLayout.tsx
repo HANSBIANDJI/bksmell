@@ -1,20 +1,20 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Sidebar } from './Sidebar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAdmin } = useAdmin();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isAdmin) {
-      router.push('/admin/login');
+      navigate('/admin/login');
     }
-  }, [isAdmin, router]);
+  }, [isAdmin, navigate]);
 
   if (!isAdmin) {
     return null;

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export interface OptimizedImageProps {
@@ -13,16 +12,25 @@ export interface OptimizedImageProps {
 }
 
 export function OptimizedImage({ src, alt, className, fill, width, height }: OptimizedImageProps) {
+  const style = fill ? {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  } as const : undefined;
+
   return (
-    <Image
+    <img
       src={src}
       alt={alt}
       className={cn('transition-all duration-300', className)}
-      fill={fill}
+      style={style}
       width={!fill ? width : undefined}
       height={!fill ? height : undefined}
-      quality={90}
-      priority
+      loading="lazy"
+      decoding="async"
     />
   );
 }

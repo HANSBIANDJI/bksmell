@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useOrder } from '@/contexts/OrderContext';
+import { Card } from "@/components/ui/card";
 import { Package, Clock, CheckCircle, AlertTriangle, ExternalLink, RefreshCw, Truck, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -17,9 +20,42 @@ const ORDER_STATUS = {
 };
 
 export default function Profile() {
-  const router = useRouter();
+  const navigate = useNavigate();
+  const { user, updateProfile } = useAuth();
+  const { toast } = useToast();
   const { orders } = useOrder();
   const [activeTab, setActiveTab] = useState('orders');
+  const [formData, setFormData] = useState({
+    displayName: user?.displayName || '',
+    email: user?.email || '',
+    photoURL: user?.photoURL || '',
+  });
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await updateProfile({
+        displayName: formData.displayName,
+        photoURL: formData.photoURL,
+      });
+      toast({
+        title: 'Profil mis à jour',
+        description: 'Vos informations ont été mises à jour avec succès',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la mise à jour du profil',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const container = {
     hidden: { opacity: 0 },
@@ -35,6 +71,10 @@ export default function Profile() {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -88,7 +128,7 @@ export default function Profile() {
                             variant="outline"
                             size="sm"
                             className="gap-2"
-                            onClick={() => router.push(`/order-tracking/${orderNumber}`)}
+                            onClick={() => navigate(`/order-tracking/${orderNumber}`)}
                           >
                             Suivre
                             <ExternalLink className="h-4 w-4" />
@@ -121,7 +161,7 @@ export default function Profile() {
                 <p className="text-gray-600 mb-4">
                   Vous n'avez pas encore passé de commande
                 </p>
-                <Button onClick={() => router.push('/parfums')}>
+                <Button onClick={() => navigate('/parfums')}>
                   Découvrir nos parfums
                 </Button>
               </motion.div>
@@ -132,8 +172,69 @@ export default function Profile() {
         <TabsContent value="profile">
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Informations personnelles</h2>
-            {/* Contenu du profil à implémenter */}
-            <p className="text-gray-600">Cette section sera bientôt disponible</p>
+            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+              <div className="space-y-4">
+                <div>
+                  {formData.photoURL && (
+                    <div className="mb-4 relative w-32 h-32 mx-auto">
+                      <OptimizedImage
+                        src={formData.photoURL}
+                        alt="Profile"
+                        fill
+                        className="rounded-full"
+                      />
+                    </div>
+                  )}
+                  <label htmlFor="photoURL" className="block text-sm font-medium text-gray-700">
+                    Photo URL
+                  </label>
+                  <Input
+                    id="photoURL"
+                    type="text"
+                    value={formData.photoURL}
+                    onChange={(e) => setFormData({ ...formData, photoURL: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+                    Nom d'affichage
+                  </label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    value={formData.displayName}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    disabled
+                    className="mt-1 bg-gray-100"
+                  />
+                </div>
+              </div>
+              <div className="flex space-x-4">
+                <Button type="submit" className="flex-1">
+                  Mettre à jour
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/update-password')}
+                  className="flex-1"
+                >
+                  Changer le mot de passe
+                </Button>
+              </div>
+            </form>
           </Card>
         </TabsContent>
       </Tabs>

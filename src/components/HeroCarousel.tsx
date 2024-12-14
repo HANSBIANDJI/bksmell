@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
-import Image from 'next/image';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/contexts/AdminContext';
 import { HeroSlide } from '@/types';
@@ -78,12 +78,11 @@ export function HeroCarousel({ onDiscoverClick }: HeroCarouselProps) {
           />
         ) : (
           <div className="relative w-full h-full">
-            <Image
+            <OptimizedImage
               src={currentMedia.mediaUrl}
               alt={currentMedia.title}
-              className="object-cover"
               fill
-              sizes="100vw"
+              className="object-cover"
             />
           </div>
         )}

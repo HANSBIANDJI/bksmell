@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
-    "build": "cd server && npm install --force && npm run build",
+    "build": "vite build",
+    "build:server": "cd server && npm install --force && npm run build",
     "start": "cd server && node dist/index.js",
     "dev": "vite"
   },

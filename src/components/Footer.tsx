@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, Twitter } from "lucide-react";
@@ -35,22 +35,22 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Navigation</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/parfums" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link to="/parfums" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Nos Parfums
                 </Link>
               </li>
               <li>
-                <Link href="/nouveautes" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link to="/nouveautes" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Nouveautés
                 </Link>
               </li>
               <li>
-                <Link href="/promotions" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link to="/promotions" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Promotions
                 </Link>
               </li>
               <li>
-                <Link href="/favoris" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                <Link to="/favoris" className="text-sm text-gray-600 hover:text-purple-600 transition-colors">
                   Favoris
                 </Link>
               </li>
@@ -92,13 +92,13 @@ export default function Footer() {
               {currentYear} BABISMELL. Tous droits réservés.
             </p>
             <div className="flex flex-wrap justify-center md:justify-end gap-4">
-              <Link href="/mentions-legales" className="text-sm text-gray-600 hover:text-purple-600">
+              <Link to="/mentions-legales" className="text-sm text-gray-600 hover:text-purple-600">
                 Mentions légales
               </Link>
-              <Link href="/confidentialite" className="text-sm text-gray-600 hover:text-purple-600">
+              <Link to="/confidentialite" className="text-sm text-gray-600 hover:text-purple-600">
                 Politique de confidentialité
               </Link>
-              <Link href="/cgv" className="text-sm text-gray-600 hover:text-purple-600">
+              <Link to="/cgv" className="text-sm text-gray-600 hover:text-purple-600">
                 CGV
               </Link>
             </div>

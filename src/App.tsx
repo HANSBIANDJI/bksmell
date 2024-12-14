@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
 import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
 import { OrderProvider } from './contexts/OrderContext';
 import { AdminProvider } from './contexts/AdminContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { queryClient } from './lib/queryClient';
 import Layout from './components/Layout';
 import AdminLayout from './components/admin/AdminLayout';
@@ -30,7 +30,7 @@ import Login from './pages/Login';
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider>
         <Router>
           <AuthProvider>
             <AdminProvider>
